@@ -22,7 +22,9 @@ namespace ModelTransfer
                                              //dla DEBUGA ustawiony jest w metodzie ReadAllData
      
 
-        private DBReader dbReader;
+        private DBReader reader;
+        DBWriter writer;
+        DBConnector dbConnector;
         private SqlConnection dbConnection;
 
         bool userClicked = false;
@@ -42,7 +44,7 @@ namespace ModelTransfer
 
         private bool establishConnection()
         {
-            DBConnector dbConnector = new DBConnector(userLogin, userPassword);
+            dbConnector = new DBConnector(userLogin, userPassword);
 #if DEBUG
             currentPath = @"C:\testDesktop\conf";
 #else
@@ -51,7 +53,7 @@ namespace ModelTransfer
             if (dbConnector.validateConfigFile(currentPath))
             {
                 dbConnection = dbConnector.getDBConnection(ConnectionSources.serverNameInFile, ConnectionTypes.sqlAuthorisation);
-                dbReader = new DBReader(dbConnection);
+                reader = new DBReader(dbConnection);
                 return true;
             }
             return false;
@@ -77,7 +79,14 @@ namespace ModelTransfer
         private void ModelsFromFileButton_Click(object sender, EventArgs e)
         {
             List<Model2D> models = readModelsFromFile();
-            writeModelsToDB(models);
+            if (models != null)
+            {
+                writeModelsToDB(models);
+            }
+            else
+            {
+                MyMessageBox.display("Nie można było odczytać pliku źródłowego", MessageBoxType.Error);
+            }
         }
 
 
@@ -113,7 +122,7 @@ namespace ModelTransfer
         private QueryData readModelsFromDB(string queryFilter = "")
         {
             string query = SqlQueries.getModels + queryFilter;
-            return dbReader.readFromDB(query);
+            return reader.readFromDB(query);
         }
 
 
@@ -182,32 +191,65 @@ namespace ModelTransfer
                 model2D.opisModel = model[SqlQueries.getModels_opisModelIndex];
                 model2D.opisModel_dataType = paramTypes[SqlQueries.getModels_opisModelIndex];
 
-                readPowierzchniaDataFromDB(model2D);
+                readPowierzchniaFromDB(model2D);
                 selectedModels.Add(model2D);
             }
             return selectedModels;
         }
 
 
-        private void readPowierzchniaDataFromDB(Model2D model)
+        private void readPowierzchniaFromDB(Model2D model)
         {
             string query = SqlQueries.getPowierzchnie + model.idModel;
-            QueryData powierzchniaData = dbReader.readFromDB(query);
+            QueryData powierzchnieData = reader.readFromDB(query);
+            List<string> paramTypes = powierzchnieData.getDataTypes();
 
-            for(int i=0; i < powierzchniaData.getDataRowsNumber(); i++)
+            for(int i=0; i < powierzchnieData.getDataRowsNumber(); i++)
             {
                 Powierzchnia pow = new Powierzchnia();
 
-                object idPowierzchni = powierzchniaData.getQueryData()[i][SqlQueries.getPowierzchnie_idPowIndex];
-                object idModel = powierzchniaData.getQueryData()[i][SqlQueries.getPowierzchnie_idModelIndex];
+                pow.idPow = powierzchnieData.getQueryData()[i][SqlQueries.getPowierzchnie_idPowIndex];
 
-                pow.idPow = idPowierzchni;
-                pow.idModel = idModel;
+                pow.idModel = powierzchnieData.getQueryData()[i][SqlQueries.getPowierzchnie_idModelIndex];
+                pow.idModel_dataType = paramTypes[SqlQueries.getPowierzchnie_idModelIndex];
+
+                pow.nazwaPow = powierzchnieData.getQueryData()[i][SqlQueries.getPowierzchnie_nazwaPowIndex];
+                pow.nazwaPow_dataType = paramTypes[SqlQueries.getPowierzchnie_nazwaPowIndex];
+
+                pow.powierzchniaData = powierzchnieData.getQueryData()[i];
+                pow.columnHeaders = powierzchnieData.getHeaders();
+                pow.columnDataTypes = powierzchnieData.getDataTypes();
+                readPowierzchniaDataFromDB(pow);
                 model.addPowierzchnia(pow);
             }
-            model.powierzchnieBulkData = powierzchniaData;
+            model.powierzchnieBulkData = powierzchnieData.getQueryData();
         }
 
+        private void readPowierzchniaDataFromDB(Powierzchnia pow)
+        {
+            string query = "";
+
+            ModelPunkty points = new ModelPunkty();
+            query = SqlQueries.getPoints + pow.idPow;
+            points.pointData = reader.readFromDBToDataTable(query);
+            pow.points = points;
+
+            ModelTriangles triangles = new ModelTriangles();
+            query = SqlQueries.getTriangles + pow.idPow;
+            triangles.triangleData = reader.readFromDBToDataTable(query);
+            pow.triangles = triangles;
+
+            ModelLinie breaklines = new ModelLinie();
+            query = SqlQueries.getBreaklines + pow.idPow;
+            breaklines.breaklineData = reader.readFromDBToDataTable(query);
+            pow.breaklines = breaklines;
+
+            ModelGrid grids = new ModelGrid();
+            query = SqlQueries.getGrids + pow.idPow;
+            grids.gridData = reader.readFromDBToDataTable(query);
+            pow.grids = grids;
+
+        }
 
         private void saveModelsToFile(List<Model2D> selectedModels)
         {
@@ -236,15 +278,23 @@ namespace ModelTransfer
             string filePath = currentPath;
             List<Model2D> models = new List<Model2D>();
 
-            if (fm.assertFileExists(filePath + @"\" + fileName))
+            try
             {
-                //deserialize
-                using (Stream stream = File.Open(filePath + @"\" + fileName, FileMode.Open))
+                if (fm.assertFileExists(filePath + @"\" + fileName))
                 {
-                    var bformatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+                    //deserialize
+                    using (Stream stream = File.Open(filePath + @"\" + fileName, FileMode.Open))
+                    {
+                        var bformatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
 
-                    models = (List<Model2D>)bformatter.Deserialize(stream);
+                        models = (List<Model2D>)bformatter.Deserialize(stream);
+                    }
                 }
+            }
+            catch (ArgumentException ex)
+            {
+                MyMessageBox.display(ex.Message, MessageBoxType.Error);
+                return null;
             }
             return models;
         }
@@ -252,62 +302,133 @@ namespace ModelTransfer
 
         private void writeModelsToDB(List<Model2D> models)
         {
-            DBWriter writer = new DBWriter(dbConnection);
+            writer = new DBWriter(dbConnection);
             DBValueTypeConverter converter = new DBValueTypeConverter();
-            int maxModelIdInDB = getMaxModelIdFromDB();
+            int maxModelIdInDB = 0;
 
             int newDirectoryId = 1;
             int newIdWlasciciel = 1;
             string newCzyArch = "0";        //wczytywane modele nie będą archiwalne
             string newIdUzytk = "null";     //wczytywane modele nie będą oznaczone jako wczytane do pamięci
 
-            foreach(Model2D model in models)
+
+            //po kolei wpisuję deklaracje wszystkich modele, linijka po linijce, do tabeli DefModel2D
+            for(int i =0; i< models.Count; i++)
             {
-                ++maxModelIdInDB;
-                modifyPowierzchniaData(model, maxModelIdInDB);
+                Model2D model = models[i];
+                
                 string nazwaModel = converter.getConvertedValue(model.nazwaModel, model.nazwaModel_dataType);
                 string opisModel = converter.getConvertedValue(model.opisModel, model.opisModel_dataType);
                 string dataModel = converter.getConvertedValue(model.dataModel, model.dataModel_dataType);
 
                 string query = SqlQueries.insertModel.Replace("@nazwaModel", nazwaModel).Replace("@opisModel", opisModel).Replace("@dataModel", dataModel).Replace("@idUzytk", newIdUzytk).Replace("@czyArch", newCzyArch).Replace("@directoryId", newDirectoryId.ToString()).Replace("@idWlasciciel", newIdWlasciciel.ToString());
                 writer.writeToDB(query);
-                writeModelDataToDB(model);
+
+                if (i == 0)         //wpis modelu robię przez insert, baza danych automatycznie nadaje mu ID, które teraz odczytuję
+                {
+                    maxModelIdInDB = getMaxModelIdFromDB();
+                }
+                else
+                {
+                    maxModelIdInDB++;       //kolejne modele będą miały kolejne ID, nie muszę za każdym razem czytać tylko inkrementuję
+                }
+
+                //w każdym modelu w powierzchniach zmieniam Id modelu na nowy, w nowej bazie danych
+                model.modifyPowierzchniaData(maxModelIdInDB);
+
+                //po zapisaniu deklaracji modelu zapisuję dane szczegółowe tego modelu, tzn powierzchnie itp, które są w osobnych tablicach
+                writePowierzchniaToDB(model);
             }
         }
 
-        private void writeModelDataToDB(Model2D model)
+        private void writePowierzchniaToDB(Model2D model)
         {
-            MyMessageBox.display("finito");
-            //throw new NotImplementedException();
+            uint maxPowId = 0;
+            string tableName = dbConnector.getTableNameFromQuery(SqlQueries.getPowierzchnie);
+
+            for(int i=0; i < model.powierzchnieList.Count; i++)
+            {
+                Powierzchnia pow = model.powierzchnieList[i];
+                List<object[]> powDataAsList = new List<object[]>();
+                powDataAsList.Add(pow.powierzchniaData);
+
+                DBValueTypeConverter converter = new DBValueTypeConverter();
+                string nazwaPow = converter.getConvertedValue(pow.nazwaPow, pow.nazwaPow_dataType);
+                string idModel = converter.getConvertedValue(pow.idModel, pow.idModel_dataType);
+                string query = SqlQueries.insertPowierzchnia.Replace("@idModel", idModel).Replace("@nazwaPow", nazwaPow);
+                writer.writeToDB(query);
+
+               // writer.writeBulkDataToDB(powDataAsList, tableName);
+
+                if (i==0)       //analogicznie jak w przypadku wpisywania deklaracji modeli, po dodaniu pierwszej powierzchni odczytuję jej ID z bazy
+                {
+                    maxPowId = getMaxPowierzchniaIdFromDB();
+                }
+                else            //kolejne ID tworzę sam
+                {
+                    maxPowId++;
+                }
+                    //w każdej powierzchni, w danych składowych tj trójkątów, punktów itd  zmieniam ID powierzchni na nowy, w nowej bazie danych
+                pow.idPow = maxPowId;
+
+                //zapisuję dane szczegółowe każdej powierzchni do bazy, tj. punkty, trójkąty itd
+                writePowierzchniaDataToDB(pow);
+            }
+
         }
+
+        
 
         private int getMaxModelIdFromDB()
         {
             string query = SqlQueries.getMaxModelId;
-            QueryData res = dbReader.readFromDB(query);
+            QueryData res = reader.readFromDB(query);
             return int.Parse(res.getQueryData()[0][0].ToString());
         }
 
 
-        private void modifyPowierzchniaData(Model2D model, int newModelId)
+        private void writePowierzchniaDataToDB(Powierzchnia pow)
         {
-            int newPowierzchniaId = getMaxPowierzchniaIdFromDB();
-            model.powierzchnieBulkData.replaceDataColumnValue(SqlQueries.getPowierzchnie_idModelIndex, newModelId);
+            string tableName = "";
+            uint newIdPow = uint.Parse(pow.idPow.ToString());
 
-            foreach (Powierzchnia pow in model.powierzchnieList)
+            tableName = dbConnector.getTableNameFromQuery(SqlQueries.getPoints);
+            ModelPunkty points = pow.points;
+            if (points.setNewIdPow(newIdPow))
             {
-                ++newPowierzchniaId;
-                pow.idModel = newModelId;
-                pow.idPow = newPowierzchniaId;
+                writer.writeBulkDataToDB(points.pointData, tableName);
             }
+
+            tableName = dbConnector.getTableNameFromQuery(SqlQueries.getTriangles);
+            ModelTriangles triangles = pow.triangles;
+            if (triangles.setNewIdPow(newIdPow))
+            {
+                writer.writeBulkDataToDB(triangles.triangleData, tableName);
+            }
+
+            tableName = dbConnector.getTableNameFromQuery(SqlQueries.getGrids);
+            ModelGrid grids = pow.grids;
+            if (grids.setNewIdPow(newIdPow))
+            {
+                writer.writeBulkDataToDB(grids.gridData, tableName);
+            }
+
+            tableName = dbConnector.getTableNameFromQuery(SqlQueries.getBreaklines);
+            ModelLinie breaklines = pow.breaklines;
+            if (breaklines.setNewIdPow(newIdPow))
+            {
+                writer.writeBulkDataToDB(breaklines.breaklineData, tableName);
+            }
+
         }
 
 
-        private int getMaxPowierzchniaIdFromDB()
+
+        private uint getMaxPowierzchniaIdFromDB()
         {
             string query = SqlQueries.getMaxPowierzchniaId;
-            QueryData res = dbReader.readFromDB(query);
-            return int.Parse(res.getQueryData()[0][0].ToString());
+            QueryData res = reader.readFromDB(query);
+            return uint.Parse(res.getQueryData()[0][0].ToString());
         }
 
         #endregion

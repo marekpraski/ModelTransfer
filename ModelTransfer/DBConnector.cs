@@ -68,7 +68,7 @@ namespace ModelTransfer
             return false;
         }
 
-        public string getTableName(string sqlQuery)
+        public string getTableNameFromQuery(string sqlQuery)
         {
             this.sqlQuery = sqlQuery;
             TextManipulator tm = new TextManipulator();

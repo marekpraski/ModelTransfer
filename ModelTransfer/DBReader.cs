@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Data.SqlClient;
+using System.Data;
 
 namespace ModelTransfer
 {
@@ -21,8 +22,10 @@ namespace ModelTransfer
         public QueryData readFromDB(string sqlQuery)
         {
             queryData = new QueryData();
+
             try
             {
+
                 SqlCommand sqlCommand = new SqlCommand(sqlQuery, dbConnection);
                 dbConnection.Open();
                 SqlDataReader sqlReader = sqlCommand.ExecuteReader();
@@ -38,23 +41,46 @@ namespace ModelTransfer
                     }
                     queryData.addQueryData(rowData);
                 }
-
+                
                 for (int i = 0; i < sqlReader.FieldCount; i++)
                 {
                     queryData.addHeader(sqlReader.GetName(i));
                     queryData.addDataType(sqlReader.GetDataTypeName(i));
                 }
+
                 sqlReader.Close();
                 sqlCommand.Dispose();
+                dbConnection.Close();
             }
             catch (System.Data.SqlClient.SqlException e)
             {
                 MyMessageBox.display(e.Message + "\r\n" + dbConnection.ConnectionString, MessageBoxType.Error);
-               
             }
 
-            dbConnection.Close();
             return queryData;
+        }
+
+        public DataTable readFromDBToDataTable(string sqlQuery)
+        {
+            DataTable data = new DataTable("data");
+
+            try
+            {
+                SqlCommand sqlCommand = new SqlCommand(sqlQuery, dbConnection);
+                dbConnection.Open();
+                SqlDataAdapter da = new SqlDataAdapter(sqlCommand);
+
+                da.Fill(data);
+
+                da.Dispose();
+                sqlCommand.Dispose();
+                dbConnection.Close();
+            }
+            catch(SqlException e)
+            {
+                MyMessageBox.display(e.Message + "\r\n" + dbConnection.ConnectionString, MessageBoxType.Error);
+            }
+            return data;
         }
     }
 }

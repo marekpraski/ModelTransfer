@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -11,7 +12,8 @@ namespace ModelTransfer
     [Serializable]
     public class QueryData
     {
-
+        public DataSet dataSet { get; set; }
+        public DataTable dataTable { get; set; }
         private List<object[]> readData;
         private List<string> headers;
         private List<string> dataTypes;     //typy danych w kolumnach
@@ -43,6 +45,7 @@ namespace ModelTransfer
             }
             return dataAsStrings;
         }
+
 
         public List<string> getHeaders()
         {
@@ -123,15 +126,6 @@ namespace ModelTransfer
         public int getDataRowsNumber()
         {
             return getColumnDataAsList().Count;
-        }
-
-
-        public void replaceDataColumnValue(int colIndex, object newValue)
-        {
-            foreach(object[] row in readData)
-            {
-                row[colIndex] = newValue;
-            }
         }
 
 

@@ -61,6 +61,23 @@ namespace ModelTransfer
 
         public static string getMaxPowierzchniaId = "select MAX(IDPow) as maxPowId from DefPowierzchni ";
 
+
+        public static string getPoints = "select IDPunkty, WspX, WspY, Rzedna, IDPow from Model_punkty where IDPow = ";
+        public static int getPoints_idPowIndex = 4;
+
+
+        public static string getTriangles = "select IDTrojkat, IDPunkty1, IDPunkty2, IDPunkty3, IDPow from Model_trojkaty where IDPow =";
+        public static int getTriangles_IdPowIndex = 4;
+
+
+        public static string getGrids = "select ID_gr, WspX, WspY, Rzedna, IDPow from Model_grid where IDPow = ";
+        public static int getGrids_IdPowIndex = 4;
+
+
+        public static string getBreaklines = "select IDLinia, IDPunkt1, IDPunkt2, IDPow from Model_linie where IDPow = ";
+        public static int getBreaklines_IdPowIndex = 3;
+
+
         //
         //zapisywanie modeli
         //
@@ -68,6 +85,8 @@ namespace ModelTransfer
         public static string insertModel = "insert into DefModel2D(NazwaModel, OpisModel, DataModel, IDUzytk, CzyArch, DirectoryId, IDUzytkWlasciciel) " + 
                                             "values (@nazwaModel, @opisModel, @dataModel, @idUzytk, @czyArch, @directoryId, @idWlasciciel);\r\n ";
 
+
+        public static string insertPowierzchnia = "insert into DefPowierzchni(IDModel, NazwaPow) values(@idModel, @nazwaPow)";
 
 
     }

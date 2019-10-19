@@ -9,7 +9,8 @@ namespace ModelTransfer
     [Serializable]
     public class Powierzchnia
     {
-        
+
+        #region Region - parametry opisowe powierzchni
         public object idPow { get; set; }
         public object idModel { get; set; }
         public object nazwaSkr { get; set; }
@@ -60,11 +61,25 @@ namespace ModelTransfer
         public string ileTri_dataType { get; set; }
         public string ileGrid_dataType { get; set; }
 
-        public ModelGrid gridData { get; set; }
-        public ModelTriangles triangleData { get; set; }
-        public ModelPunkty pointData { get; set; }
-        public ModelLinie breaklineData { get; set; }
+        #endregion
 
-        public QueryData triangles { get; set; }
+
+        #region Region - parametry elementy składowe powierzchni
+
+        public ModelGrid grids { get; set; }
+        public ModelTriangles triangles { get; set; }
+        public ModelPunkty points { get; set; }
+        public ModelLinie breaklines { get; set; }
+
+        public object[] powierzchniaData { get; set; }
+        public List<string> columnHeaders { get; set; }
+        public List<string> columnDataTypes { get; set; }
+
+        #endregion
+
+        internal void modifyData(uint newValue)
+        {
+            
+        }
     }
 }

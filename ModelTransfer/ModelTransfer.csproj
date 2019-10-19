@@ -45,6 +45,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Complex.cs" />
     <Compile Include="DBValueTypeConverter.cs" />
     <Compile Include="DBConnector.cs" />
     <Compile Include="DBReader.cs" />
