@@ -51,11 +51,18 @@
     <Compile Include="DBReader.cs" />
     <Compile Include="DBWriter.cs" />
     <Compile Include="FileManipulator.cs" />
-    <Compile Include="Form1.cs">
+    <Compile Include="GetFileNameFormEventArgs.cs" />
+    <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Form1.Designer.cs">
-      <DependentUpon>Form1.cs</DependentUpon>
+    <Compile Include="MainForm.Designer.cs">
+      <DependentUpon>MainForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="GetFileNameForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="GetFileNameForm.Designer.cs">
+      <DependentUpon>GetFileNameForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Model2D.cs" />
     <Compile Include="ModelGrid.cs" />
@@ -75,8 +82,11 @@
     <Compile Include="QueryData.cs" />
     <Compile Include="SqlQueries.cs" />
     <Compile Include="TextManipulator.cs" />
-    <EmbeddedResource Include="Form1.resx">
-      <DependentUpon>Form1.cs</DependentUpon>
+    <EmbeddedResource Include="MainForm.resx">
+      <DependentUpon>MainForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GetFileNameForm.resx">
+      <DependentUpon>GetFileNameForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="MyMessageBox.resx">
       <DependentUpon>MyMessageBox.cs</DependentUpon>

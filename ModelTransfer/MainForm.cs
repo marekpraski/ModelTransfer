@@ -12,7 +12,7 @@ using System.IO;
 
 namespace ModelTransfer
 {
-    public partial class Form1 : Form
+    public partial class MainForm : Form
     {
 
         private string userLogin = "";
@@ -30,7 +30,7 @@ namespace ModelTransfer
         bool userClicked = false;
 
 
-        public Form1(string login, string pass)
+        public MainForm(string login, string pass)
         {
             InitializeComponent();
             this.userLogin = login;
@@ -76,6 +76,7 @@ namespace ModelTransfer
             MyMessageBox.display(pomocInfo);
         }
 
+
         private void ModelsFromFileButton_Click(object sender, EventArgs e)
         {
             List<Model2D> models = readModelsFromFile();
@@ -99,18 +100,26 @@ namespace ModelTransfer
         }
 
 
-        private void ToolStripSaveToFileButton_Click(object sender, EventArgs e)
+        private void SaveToFileButton_Click(object sender, EventArgs e)
         {
             if (listView1.CheckedItems.Count > 0)
             {
-                List<Model2D> selectedModels = readSelectedModelsFromDB();
-                saveModelsToFile(selectedModels);
-                toolStripSaveToFileButton.Enabled = false;
+                GetFileNameForm fnForm = new GetFileNameForm();
+                fnForm.GetFileName += getFileNameForm_ButtonClick;
+                fnForm.ShowDialog();
+                
             }
             else
             {
                 MyMessageBox.display("Brak zaznaczonych modeli");
             }
+        }
+
+        private void getFileNameForm_ButtonClick(object sender, GetFileNameFormEventArgs args)
+        {
+            List<Model2D> selectedModels = readSelectedModelsFromDB();
+            saveModelsToFile(selectedModels, args.fileName);
+            toolStripSaveToFileButton.Enabled = false;
         }
 
 
@@ -251,10 +260,19 @@ namespace ModelTransfer
 
         }
 
-        private void saveModelsToFile(List<Model2D> selectedModels)
+        private void saveModelsToFile(List<Model2D> selectedModels, string fileName)
         {
             string fileSaveDir = currentPath;
-            string fileName = "modele.bin";
+
+            if (fileName == null || fileName == "")
+            {
+                fileName = "modele.bin";
+            }
+            else
+            {
+               fileName += ".bin";
+            }
+
             string serializationFile = Path.Combine(fileSaveDir, fileName);
 
             //serialize

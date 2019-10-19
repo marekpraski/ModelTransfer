@@ -1,6 +1,6 @@
 ﻿namespace ModelTransfer
 {
-    partial class Form1
+    partial class MainForm
     {
         /// <summary>
         /// Wymagana zmienna projektanta.
@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.listView1 = new System.Windows.Forms.ListView();
             this.modelIdColHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.modelNameColHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -86,7 +86,7 @@
             this.toolStripSaveToFileButton.Name = "toolStripSaveToFileButton";
             this.toolStripSaveToFileButton.Size = new System.Drawing.Size(23, 22);
             this.toolStripSaveToFileButton.ToolTipText = "zapisz modele do pliku";
-            this.toolStripSaveToFileButton.Click += new System.EventHandler(this.ToolStripSaveToFileButton_Click);
+            this.toolStripSaveToFileButton.Click += new System.EventHandler(this.SaveToFileButton_Click);
             // 
             // modelsFromFileButton
             // 
