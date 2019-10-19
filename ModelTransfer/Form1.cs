@@ -200,7 +200,7 @@ namespace ModelTransfer
 
         private void readPowierzchniaFromDB(Model2D model)
         {
-            string query = SqlQueries.getPowierzchnie + model.idModel;
+            string query = SqlQueries.getPowierzchnie + SqlQueries.getPowierzchnie_FilterAllInModel + model.idModel;
             QueryData powierzchnieData = reader.readFromDB(query);
             List<string> paramTypes = powierzchnieData.getDataTypes();
 
@@ -219,10 +219,10 @@ namespace ModelTransfer
                 pow.powierzchniaData = powierzchnieData.getQueryData()[i];
                 pow.columnHeaders = powierzchnieData.getHeaders();
                 pow.columnDataTypes = powierzchnieData.getDataTypes();
+                pow.powDataTable = reader.readFromDBToDataTable(SqlQueries.getPowierzchnie + SqlQueries.getPowierzchnie_FilterSingleById + pow.idPow);
                 readPowierzchniaDataFromDB(pow);
                 model.addPowierzchnia(pow);
             }
-            model.powierzchnieBulkData = powierzchnieData.getQueryData();
         }
 
         private void readPowierzchniaDataFromDB(Powierzchnia pow)
@@ -312,7 +312,7 @@ namespace ModelTransfer
             string newIdUzytk = "null";     //wczytywane modele nie będą oznaczone jako wczytane do pamięci
 
 
-            //po kolei wpisuję deklaracje wszystkich modele, linijka po linijce, do tabeli DefModel2D
+            //po kolei wpisuję deklaracje wszystkich modeli, po jednym, do tabeli DefModel2D
             for(int i =0; i< models.Count; i++)
             {
                 Model2D model = models[i];
@@ -334,11 +334,12 @@ namespace ModelTransfer
                 }
 
                 //w każdym modelu w powierzchniach zmieniam Id modelu na nowy, w nowej bazie danych
-                model.modifyPowierzchniaData(maxModelIdInDB);
+                model.setNewModelId(maxModelIdInDB);
 
                 //po zapisaniu deklaracji modelu zapisuję dane szczegółowe tego modelu, tzn powierzchnie itp, które są w osobnych tablicach
                 writePowierzchniaToDB(model);
             }
+            MyMessageBox.display("Modele wczytane");
         }
 
         private void writePowierzchniaToDB(Model2D model)
@@ -349,16 +350,8 @@ namespace ModelTransfer
             for(int i=0; i < model.powierzchnieList.Count; i++)
             {
                 Powierzchnia pow = model.powierzchnieList[i];
-                List<object[]> powDataAsList = new List<object[]>();
-                powDataAsList.Add(pow.powierzchniaData);
 
-                DBValueTypeConverter converter = new DBValueTypeConverter();
-                string nazwaPow = converter.getConvertedValue(pow.nazwaPow, pow.nazwaPow_dataType);
-                string idModel = converter.getConvertedValue(pow.idModel, pow.idModel_dataType);
-                string query = SqlQueries.insertPowierzchnia.Replace("@idModel", idModel).Replace("@nazwaPow", nazwaPow);
-                writer.writeToDB(query);
-
-               // writer.writeBulkDataToDB(powDataAsList, tableName);
+                writer.writeBulkDataToDB(pow.powDataTable, tableName);
 
                 if (i==0)       //analogicznie jak w przypadku wpisywania deklaracji modeli, po dodaniu pierwszej powierzchni odczytuję jej ID z bazy
                 {

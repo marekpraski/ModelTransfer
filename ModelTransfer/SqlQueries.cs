@@ -32,34 +32,19 @@ namespace ModelTransfer
 
 
         public static string getPowierzchnie = "select IDPow, IDModel, NazwaSkr, NazwaPow, Promien, PoczWspY, PoczWspX, RozmOczekY, RozmOczekX, LbaOczekY, LbaOczekX, IlPkt, IlSektor, Wykladnik, PowObrys, " +
-                                                "DataPowierzchni, dane_bin, dane_bin_rozmiar, dane_bin_index, dane_bin_index_rozmiar, minZ, maxZ, ileTri, ileGrd from DefPowierzchni where IDModel = ";
+                                                "DataPowierzchni, dane_bin, dane_bin_rozmiar, dane_bin_index, dane_bin_index_rozmiar, minZ, maxZ, ileTri, ileGrd from DefPowierzchni  ";
+
+        public static string getPowierzchnie_FilterAllInModel = " where IDModel =";
+        public static string getPowierzchnie_FilterSingleById = " where IDPow =";
 
         public static int getPowierzchnie_idPowIndex = 0;
         public static int getPowierzchnie_idModelIndex = 1;
         public static int getPowierzchnie_nazwaSkrIndex = 2;
         public static int getPowierzchnie_nazwaPowIndex = 3;
-        public static int getPowierzchnie_promienIndex = 4;
-        public static int getPowierzchnie_poczWspYIndex = 5;
-        public static int getPowierzchnie_poczWspXIndex = 6;
-        public static int getPowierzchnie_rozmOczekYIndex = 7;
-        public static int getPowierzchnie_rozmOczekXIndex = 8;
-        public static int getPowierzchnie_lbaOczekYIndex = 9;
-        public static int getPowierzchnie_lbaOczekXIndex = 10;
-        public static int getPowierzchnie_ilPktIndex = 11;
-        public static int getPowierzchnie_ilSektorIndex = 12;
-        public static int getPowierzchnie_wykladnikIndex = 13;
-        public static int getPowierzchnie_powObrysIndex = 14;
-        public static int getPowierzchnie_dataPowierzchniIndex = 15;
-        public static int getPowierzchnie_daneBinIndex = 16;
-        public static int getPowierzchnie_daneBinRozmiarIndex = 17;
-        public static int getPowierzchnie_daneBinIndexIndex = 18;
-        public static int getPowierzchnie_daneBinIndexRozmiarIndex = 19;
-        public static int getPowierzchnie_minZIndex = 20;
-        public static int getPowierzchnie_maxZIndex = 21;
-        public static int getPowierzchnie_ileTriIndex = 22;
-        public static int getPowierzchnie_ileGridIndex = 23;
+
 
         public static string getMaxPowierzchniaId = "select MAX(IDPow) as maxPowId from DefPowierzchni ";
+
 
 
         public static string getPoints = "select IDPunkty, WspX, WspY, Rzedna, IDPow from Model_punkty where IDPow = ";
