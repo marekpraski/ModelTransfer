@@ -36,6 +36,8 @@
             this.toolStripSaveToFileButton = new System.Windows.Forms.ToolStripButton();
             this.modelsFromFileButton = new System.Windows.Forms.ToolStripButton();
             this.helpButton = new System.Windows.Forms.ToolStripButton();
+            this.directoryTreeControl1 = new ModelTransfer.DirectoryTreeControl();
+            this.label1 = new System.Windows.Forms.Label();
             this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -46,9 +48,9 @@
             this.modelIdColHeader,
             this.modelNameColHeader});
             this.listView1.HideSelection = false;
-            this.listView1.Location = new System.Drawing.Point(2, 28);
+            this.listView1.Location = new System.Drawing.Point(232, 49);
             this.listView1.Name = "listView1";
-            this.listView1.Size = new System.Drawing.Size(241, 477);
+            this.listView1.Size = new System.Drawing.Size(241, 281);
             this.listView1.TabIndex = 0;
             this.listView1.UseCompatibleStateImageBehavior = false;
             this.listView1.View = System.Windows.Forms.View.Details;
@@ -73,7 +75,7 @@
             this.helpButton});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(275, 25);
+            this.toolStrip1.Size = new System.Drawing.Size(481, 25);
             this.toolStrip1.TabIndex = 1;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -96,7 +98,7 @@
             this.modelsFromFileButton.Name = "modelsFromFileButton";
             this.modelsFromFileButton.Size = new System.Drawing.Size(23, 22);
             this.modelsFromFileButton.ToolTipText = "zapisz modele z pliku do bazy";
-            this.modelsFromFileButton.Click += new System.EventHandler(this.ModelsFromFileButton_Click);
+            this.modelsFromFileButton.Click += new System.EventHandler(this.SaveToDBButton_Click);
             // 
             // helpButton
             // 
@@ -108,14 +110,32 @@
             this.helpButton.ToolTipText = "pomoc";
             this.helpButton.Click += new System.EventHandler(this.HelpButton_Click);
             // 
-            // Form1
+            // directoryTreeControl1
+            // 
+            this.directoryTreeControl1.Location = new System.Drawing.Point(12, 28);
+            this.directoryTreeControl1.Name = "directoryTreeControl1";
+            this.directoryTreeControl1.Size = new System.Drawing.Size(213, 302);
+            this.directoryTreeControl1.TabIndex = 2;
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(232, 29);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(79, 13);
+            this.label1.TabIndex = 3;
+            this.label1.Text = "wybierz modele";
+            // 
+            // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(275, 508);
+            this.ClientSize = new System.Drawing.Size(481, 343);
+            this.Controls.Add(this.label1);
+            this.Controls.Add(this.directoryTreeControl1);
             this.Controls.Add(this.toolStrip1);
             this.Controls.Add(this.listView1);
-            this.Name = "Form1";
+            this.Name = "MainForm";
             this.Text = "Modeler2D model transfer";
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
@@ -133,6 +153,8 @@
         private System.Windows.Forms.ToolStripButton toolStripSaveToFileButton;
         private System.Windows.Forms.ToolStripButton modelsFromFileButton;
         private System.Windows.Forms.ToolStripButton helpButton;
+        private DirectoryTreeControl directoryTreeControl1;
+        private System.Windows.Forms.Label label1;
     }
 }
 

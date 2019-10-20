@@ -16,7 +16,7 @@ namespace ModelTransfer
     {
 
 
-        public delegate void GetFileNameEventHandler(object sender, GetFileNameFormEventArgs args);
+        public delegate void GetFileNameEventHandler(object sender, MyEventArgs args);
         public event GetFileNameEventHandler GetFileName;
 
         public GetFileNameForm()
@@ -35,7 +35,7 @@ namespace ModelTransfer
         {
             if(GetFileName != null)
             {
-                GetFileNameFormEventArgs args = new GetFileNameFormEventArgs();
+                MyEventArgs args = new MyEventArgs();
                 args.fileName = textBox1.Text;
                 GetFileName(this, args);
             }

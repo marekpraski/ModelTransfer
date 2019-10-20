@@ -30,12 +30,13 @@ namespace ModelTransfer
         bool userClicked = false;
 
 
+
         public MainForm(string login, string pass)
         {
             InitializeComponent();
             this.userLogin = login;
             this.userPassword = pass;
-            populateModelListView();
+            setupThisForm();
         }
 
 
@@ -77,8 +78,10 @@ namespace ModelTransfer
         }
 
 
-        private void ModelsFromFileButton_Click(object sender, EventArgs e)
+        private void SaveToDBButton_Click(object sender, EventArgs e)
         {
+            GetDirectoryAndUserForm getDir = new GetDirectoryAndUserForm(reader);
+            getDir.ShowDialog();
             List<Model2D> models = readModelsFromFile();
             if (models != null)
             {
@@ -115,7 +118,7 @@ namespace ModelTransfer
             }
         }
 
-        private void getFileNameForm_ButtonClick(object sender, GetFileNameFormEventArgs args)
+        private void getFileNameForm_ButtonClick(object sender, MyEventArgs args)
         {
             List<Model2D> selectedModels = readSelectedModelsFromDB();
             saveModelsToFile(selectedModels, args.fileName);
@@ -135,11 +138,25 @@ namespace ModelTransfer
         }
 
 
-        private void populateModelListView()
+        private void setupThisForm()
         {
             if (establishConnection())
             {
-                QueryData modelData = readModelsFromDB();
+                directoryTreeControl1.directorySelectedEvent += onDirectorySelected_treeViewNodeSelected;
+                directoryTreeControl1.setUpTreeview(reader);
+            }
+        }
+
+        private void onDirectorySelected_treeViewNodeSelected(object sender, MyEventArgs args)
+        {
+            populateModelListview(args.selectedDirectoryId);
+        }
+
+        private void populateModelListview(string selectedDirectoryId)
+        {
+            listView1.Items.Clear();
+            string queryFilter = SqlQueries.getModelsByDirectory + selectedDirectoryId;
+            QueryData modelData = readModelsFromDB(queryFilter);
                 if (modelData.getHeaders().Count > 0)
                 {
                     foreach (string[] model in modelData.getQueryDataAsStrings())
@@ -147,12 +164,12 @@ namespace ModelTransfer
                         ListViewItem item = new ListViewItem(model);
                         listView1.Items.Add(item);
                     }
+                listView1.Refresh();
                 }
                 else
                 {
                     MyMessageBox.display("Nie można było załadować modeli", MessageBoxType.Error);
                 }
-            }
         }
 
 

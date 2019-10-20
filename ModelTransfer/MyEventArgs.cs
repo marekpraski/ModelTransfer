@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 
 namespace ModelTransfer
 {
-    public class GetFileNameFormEventArgs : EventArgs
+    public class MyEventArgs : EventArgs
     {
         public string fileName { get; set; }
+        public string selectedDirectoryId { get; set; }
     }
 }

@@ -15,9 +15,18 @@ namespace ModelTransfer
         //
 
 
+        public static string getDirectories = "select DirectoryId, DirectoryName, ParentDirectoryId from ModelDirectories where Archiwum = 0 and DirectoryId>1 ";
+
+        public static short getDirectories_directoryIdIndex = 0;
+        public static short getDirectories_directoryNameIndex = 1;
+        public static short getDirectories_parentIdIndex = 2;
+
+
         public static string getModels = "select IDModel, NazwaModel, OpisModel, DataModel, IDUzytk, CzyArch, DirectoryId, IDUzytkWlasciciel from DefModel2D ";
         public static string getModelsByIdFilter = "where IDModel in(@iDs)";
-  
+        public static string getModelsByDirectory = "where DirectoryId =";
+
+
         public static int getModels_idModelIndex = 0;
         public static int getModels_nazwaModelIndex = 1;
         public static int getModels_opisModelIndex = 2;
@@ -71,7 +80,10 @@ namespace ModelTransfer
                                             "values (@nazwaModel, @opisModel, @dataModel, @idUzytk, @czyArch, @directoryId, @idWlasciciel);\r\n ";
 
 
-        public static string insertPowierzchnia = "insert into DefPowierzchni(IDModel, NazwaPow) values(@idModel, @nazwaPow)";
+        public static string getUsers = "select IDUzytk, Uzytkownik from Uzytkownik ";
+
+        public static short getUsers_idUzytkownikIndex = 0;
+        public static short getUsers_uzytkownikIndex = 1;
 
 
     }
