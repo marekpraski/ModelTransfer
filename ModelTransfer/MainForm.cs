@@ -63,12 +63,22 @@ namespace ModelTransfer
         #endregion
 
 
-        #region Region - zdarzenia wywołane przez interakcję użytkownika
+        #region Region - zdarzenia wywołane w tej formatce przez interakcję użytkownika
 
-        private void ListView1_MouseClick(object sender, MouseEventArgs e)
+        private void modelsListView_MouseClick(object sender, MouseEventArgs e)
         {
             userClicked = true;
         }
+
+
+        private void modelsListView_ItemChecked(object sender, ItemCheckedEventArgs e)
+        {
+            if (userClicked)
+            {
+                toolStripSaveToFileButton.Enabled = true;
+            }
+        }
+
 
 
         private void HelpButton_Click(object sender, EventArgs e)
@@ -81,36 +91,20 @@ namespace ModelTransfer
         private void SaveToDBButton_Click(object sender, EventArgs e)
         {
             GetDirectoryAndUserForm getDir = new GetDirectoryAndUserForm(reader);
+            getDir.acceptButtonClickedEvent += getUserAndDirectory_ButtonClick;
             getDir.ShowDialog();
-            List<Model2D> models = readModelsFromFile();
-            if (models != null)
-            {
-                writeModelsToDB(models);
-            }
-            else
-            {
-                MyMessageBox.display("Nie można było odczytać pliku źródłowego", MessageBoxType.Error);
-            }
+            
         }
 
-
-        private void ListView1_ItemChecked(object sender, ItemCheckedEventArgs e)
-        {
-            if (userClicked)
-            {
-                toolStripSaveToFileButton.Enabled = true;
-            }
-        }
 
 
         private void SaveToFileButton_Click(object sender, EventArgs e)
         {
-            if (listView1.CheckedItems.Count > 0)
+            if (modelsListView.CheckedItems.Count > 0)
             {
                 GetFileNameForm fnForm = new GetFileNameForm();
                 fnForm.GetFileName += getFileNameForm_ButtonClick;
-                fnForm.ShowDialog();
-                
+                fnForm.ShowDialog();                
             }
             else
             {
@@ -118,12 +112,35 @@ namespace ModelTransfer
             }
         }
 
+
+        #endregion
+
+
+        #region Region - zdarzenia wywołane przez interakcję użytkownika w innych formatkach, mające wpływ na akcje tej formatki
+
+        //formatka GetFileNameForm
         private void getFileNameForm_ButtonClick(object sender, MyEventArgs args)
         {
             List<Model2D> selectedModels = readSelectedModelsFromDB();
             saveModelsToFile(selectedModels, args.fileName);
             toolStripSaveToFileButton.Enabled = false;
         }
+
+
+        //formatka GetDirectoryAndUserForm
+        private void getUserAndDirectory_ButtonClick(object sender, MyEventArgs args)
+        {
+            List<Model2D> models = readModelsFromFile();
+            if (models != null)
+            {
+                writeModelsToDB(models, args.selectedDirectoryId, args.selectedUserId);
+            }
+            else
+            {
+                MyMessageBox.display("Nie można było odczytać pliku źródłowego", MessageBoxType.Error);
+            }
+        }
+
 
 
         #endregion
@@ -154,7 +171,7 @@ namespace ModelTransfer
 
         private void populateModelListview(string selectedDirectoryId)
         {
-            listView1.Items.Clear();
+            modelsListView.Items.Clear();
             string queryFilter = SqlQueries.getModelsByDirectory + selectedDirectoryId;
             QueryData modelData = readModelsFromDB(queryFilter);
                 if (modelData.getHeaders().Count > 0)
@@ -162,9 +179,9 @@ namespace ModelTransfer
                     foreach (string[] model in modelData.getQueryDataAsStrings())
                     {
                         ListViewItem item = new ListViewItem(model);
-                        listView1.Items.Add(item);
+                        modelsListView.Items.Add(item);
                     }
-                listView1.Refresh();
+                modelsListView.Refresh();
                 }
                 else
                 {
@@ -178,7 +195,7 @@ namespace ModelTransfer
         {
             List<Model2D> selectedModels = new List<Model2D>();
             string modelIds = "";
-            foreach (ListViewItem checkedModel in listView1.CheckedItems)
+            foreach (ListViewItem checkedModel in modelsListView.CheckedItems)
             {
                 modelIds += (checkedModel.Text + ",");
             }
@@ -287,7 +304,7 @@ namespace ModelTransfer
             }
             else
             {
-               fileName += ".bin";
+               fileName = "modele.bin"; //+= ".bin";
             }
 
             string serializationFile = Path.Combine(fileSaveDir, fileName);
@@ -335,14 +352,12 @@ namespace ModelTransfer
         }
 
 
-        private void writeModelsToDB(List<Model2D> models)
+        private void writeModelsToDB(List<Model2D> models, string newDirectoryId, string newIdWlasciciel)
         {
             writer = new DBWriter(dbConnection);
             DBValueTypeConverter converter = new DBValueTypeConverter();
             int maxModelIdInDB = 0;
 
-            int newDirectoryId = 1;
-            int newIdWlasciciel = 1;
             string newCzyArch = "0";        //wczytywane modele nie będą archiwalne
             string newIdUzytk = "null";     //wczytywane modele nie będą oznaczone jako wczytane do pamięci
 

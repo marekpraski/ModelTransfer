@@ -13,7 +13,12 @@ namespace ModelTransfer
 {
     public partial class GetDirectoryAndUserForm : Form
     {
+        public delegate void AcceptButtonClickEventHandler(object sender, MyEventArgs args);
+        public event AcceptButtonClickEventHandler acceptButtonClickedEvent;
+
         private DBReader reader;
+        private string selectedDirId = "";
+        private string selectedUserId = "";
 
         public GetDirectoryAndUserForm(DBReader reader)
         {
@@ -26,7 +31,7 @@ namespace ModelTransfer
 
         private void onDirectorySelected_TreeViewNodeSelected(object sender, MyEventArgs args)
         {
-
+            selectedDirId = args.selectedDirectoryId;
         }
 
         private void populateUserListview()
@@ -42,6 +47,31 @@ namespace ModelTransfer
                 item.Text = user[SqlQueries.getUsers_uzytkownikIndex];
                 item.Name = user[SqlQueries.getUsers_idUzytkownikIndex];
                 userListView.Items.Add(item);
+            }
+        }
+
+        private void Button1_Click(object sender, EventArgs e)
+        {
+            if (userListView.SelectedItems.Count >0 && selectedDirId != "")
+            {
+                ListViewItem item = userListView.SelectedItems[0];          //multiselect = false
+                selectedUserId = item.Name;
+                onAcceptButtonClick();
+            }
+            else
+            {
+                MyMessageBox.display("Należy wybrać katalog docelowy i użytkownika");
+            }
+        }
+
+        protected virtual void onAcceptButtonClick()
+        {
+            if (acceptButtonClickedEvent != null)
+            {
+                MyEventArgs args = new MyEventArgs();
+                args.selectedDirectoryId = this.selectedDirId;
+                args.selectedUserId = this.selectedUserId;
+                acceptButtonClickedEvent(this, args);
             }
         }
     }

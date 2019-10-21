@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
-            this.listView1 = new System.Windows.Forms.ListView();
+            this.modelsListView = new System.Windows.Forms.ListView();
             this.modelIdColHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.modelNameColHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
@@ -41,21 +41,21 @@
             this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
-            // listView1
+            // modelsListView
             // 
-            this.listView1.CheckBoxes = true;
-            this.listView1.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.modelsListView.CheckBoxes = true;
+            this.modelsListView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.modelIdColHeader,
             this.modelNameColHeader});
-            this.listView1.HideSelection = false;
-            this.listView1.Location = new System.Drawing.Point(232, 49);
-            this.listView1.Name = "listView1";
-            this.listView1.Size = new System.Drawing.Size(241, 281);
-            this.listView1.TabIndex = 0;
-            this.listView1.UseCompatibleStateImageBehavior = false;
-            this.listView1.View = System.Windows.Forms.View.Details;
-            this.listView1.ItemChecked += new System.Windows.Forms.ItemCheckedEventHandler(this.ListView1_ItemChecked);
-            this.listView1.MouseClick += new System.Windows.Forms.MouseEventHandler(this.ListView1_MouseClick);
+            this.modelsListView.HideSelection = false;
+            this.modelsListView.Location = new System.Drawing.Point(232, 49);
+            this.modelsListView.Name = "modelsListView";
+            this.modelsListView.Size = new System.Drawing.Size(241, 281);
+            this.modelsListView.TabIndex = 0;
+            this.modelsListView.UseCompatibleStateImageBehavior = false;
+            this.modelsListView.View = System.Windows.Forms.View.Details;
+            this.modelsListView.ItemChecked += new System.Windows.Forms.ItemCheckedEventHandler(this.modelsListView_ItemChecked);
+            this.modelsListView.MouseClick += new System.Windows.Forms.MouseEventHandler(this.modelsListView_MouseClick);
             // 
             // modelIdColHeader
             // 
@@ -134,7 +134,7 @@
             this.Controls.Add(this.label1);
             this.Controls.Add(this.directoryTreeControl1);
             this.Controls.Add(this.toolStrip1);
-            this.Controls.Add(this.listView1);
+            this.Controls.Add(this.modelsListView);
             this.Name = "MainForm";
             this.Text = "Modeler2D model transfer";
             this.toolStrip1.ResumeLayout(false);
@@ -146,7 +146,7 @@
 
         #endregion
 
-        private System.Windows.Forms.ListView listView1;
+        private System.Windows.Forms.ListView modelsListView;
         private System.Windows.Forms.ColumnHeader modelIdColHeader;
         private System.Windows.Forms.ColumnHeader modelNameColHeader;
         private System.Windows.Forms.ToolStrip toolStrip1;
