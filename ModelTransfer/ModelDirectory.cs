@@ -6,10 +6,12 @@ using System.Threading.Tasks;
 
 namespace ModelTransfer
 {
+    [Serializable]
     public class ModelDirectory
     {
         public string name { get; set; }
         public string id { get; set; }
+        public string newId { get; set; }
         public string parentId { get; set; }
         public List<ModelDirectory> children { get; }
 

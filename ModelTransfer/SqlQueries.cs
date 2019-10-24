@@ -24,7 +24,7 @@ namespace ModelTransfer
 
         public static string getModels = "select IDModel, NazwaModel, OpisModel, DataModel, IDUzytk, CzyArch, DirectoryId, IDUzytkWlasciciel from DefModel2D ";
         public static string getModelsByIdFilter = "where IDModel in(@iDs)";
-        public static string getModelsByDirectory = "where DirectoryId =";
+        public static string getModelsByDirectoryFilter = "where DirectoryId =";
 
 
         public static int getModels_idModelIndex = 0;
@@ -40,11 +40,14 @@ namespace ModelTransfer
         public static string getMaxModelId = "select MAX(IDModel) as maxModelId from DefModel2D"; 
 
 
-        public static string getPowierzchnie = "select IDPow, IDModel, NazwaSkr, NazwaPow, Promien, PoczWspY, PoczWspX, RozmOczekY, RozmOczekX, LbaOczekY, LbaOczekX, IlPkt, IlSektor, Wykladnik, PowObrys, " +
-                                                "DataPowierzchni, dane_bin, dane_bin_rozmiar, dane_bin_index, dane_bin_index_rozmiar, minZ, maxZ, ileTri, ileGrd from DefPowierzchni  ";
+        public static string getPowierzchnieNoBlob = "select IDPow, IDModel, NazwaSkr, NazwaPow, Promien, PoczWspY, PoczWspX, RozmOczekY, RozmOczekX, LbaOczekY, LbaOczekX, IlPkt, IlSektor, Wykladnik, null as PowObrys, " +
+                                                "DataPowierzchni, null as dane_bin, dane_bin_rozmiar, null as dane_bin_index, dane_bin_index_rozmiar, minZ, maxZ, ileTri, ileGrd from DefPowierzchni  ";
 
-        public static string getPowierzchnie_FilterAllInModel = " where IDModel =";
-        public static string getPowierzchnie_FilterSingleById = " where IDPow =";
+        public static string getPowierzchnieFull = "select IDPow, IDModel, NazwaSkr, NazwaPow, Promien, PoczWspY, PoczWspX, RozmOczekY, RozmOczekX, LbaOczekY, LbaOczekX, IlPkt, IlSektor, Wykladnik, PowObrys, " +
+                                               "DataPowierzchni, dane_bin, dane_bin_rozmiar, dane_bin_index, dane_bin_index_rozmiar, minZ, maxZ, ileTri, ileGrd from DefPowierzchni  ";
+
+        public static string getPowierzchnie_byIdModelFilter = " where IDModel =";
+        public static string getPowierzchnie_byIdPowFilter = " where IDPow =";
 
         public static int getPowierzchnie_idPowIndex = 0;
         public static int getPowierzchnie_idModelIndex = 1;
@@ -84,6 +87,11 @@ namespace ModelTransfer
 
         public static short getUsers_idUzytkownikIndex = 0;
         public static short getUsers_uzytkownikIndex = 1;
+
+
+        public static string insertDirectory = "insert into ModelDirectories(DirectoryName, ParentDirectoryId, Archiwum) values ('@directoryName', null, 0) ";
+
+        public static string updateDirectoryParentId = "update ModelDirectories set ParentDirectoryId = @newParentId where DirectoryId = ";
 
 
     }

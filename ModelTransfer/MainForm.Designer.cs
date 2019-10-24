@@ -38,6 +38,8 @@
             this.helpButton = new System.Windows.Forms.ToolStripButton();
             this.directoryTreeControl1 = new ModelTransfer.DirectoryTreeControl();
             this.label1 = new System.Windows.Forms.Label();
+            this.saveModelOptionsCombo = new System.Windows.Forms.ToolStripComboBox();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -71,6 +73,8 @@
             // 
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripSaveToFileButton,
+            this.saveModelOptionsCombo,
+            this.toolStripSeparator1,
             this.modelsFromFileButton,
             this.helpButton});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
@@ -126,6 +130,16 @@
             this.label1.TabIndex = 3;
             this.label1.Text = "wybierz modele";
             // 
+            // saveModelOptionsCombo
+            // 
+            this.saveModelOptionsCombo.Name = "saveModelOptionsCombo";
+            this.saveModelOptionsCombo.Size = new System.Drawing.Size(121, 25);
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 25);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -155,6 +169,8 @@
         private System.Windows.Forms.ToolStripButton helpButton;
         private DirectoryTreeControl directoryTreeControl1;
         private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.ToolStripComboBox saveModelOptionsCombo;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
     }
 }
 

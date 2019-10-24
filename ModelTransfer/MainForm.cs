@@ -23,11 +23,14 @@ namespace ModelTransfer
      
 
         private DBReader reader;
-        DBWriter writer;
-        DBConnector dbConnector;
+        private DBWriter writer;
+        private DBConnector dbConnector;
         private SqlConnection dbConnection;
 
-        bool userClicked = false;
+        private bool userClicked = false;
+        private bool getModelsFromDirectories = false;           //true jeżeli istnieje gałąź w drzewie katalogów, która ma zaznaczony checkbox
+
+        private string[] modelSaveOptions = { "same punkty", "pełne modele" };
 
 
 
@@ -38,6 +41,21 @@ namespace ModelTransfer
             this.userPassword = pass;
             setupThisForm();
         }
+
+
+        private void setupThisForm()
+        {
+            if (establishConnection())
+            {
+                directoryTreeControl1.directorySelectedEvent += onTreeviewDirectorySelected;
+                directoryTreeControl1.directoryCheckedEvent += onTreeviewDirectoryChecked;
+                saveModelOptionsCombo.Items.AddRange(modelSaveOptions);
+                saveModelOptionsCombo.SelectedIndex = 0;
+                directoryTreeControl1.turnTreeviewCheckboxesOn();
+                directoryTreeControl1.setUpThisForm(reader);
+            }
+        }
+
 
 
         #region Region - start programu, połączenie z bazą danych
@@ -91,7 +109,7 @@ namespace ModelTransfer
         private void SaveToDBButton_Click(object sender, EventArgs e)
         {
             GetDirectoryAndUserForm getDir = new GetDirectoryAndUserForm(reader);
-            getDir.acceptButtonClickedEvent += getUserAndDirectory_ButtonClick;
+            getDir.acceptButtonClickedEvent += onGetUserAndDirectory_ButtonClick;
             getDir.ShowDialog();
             
         }
@@ -100,10 +118,10 @@ namespace ModelTransfer
 
         private void SaveToFileButton_Click(object sender, EventArgs e)
         {
-            if (modelsListView.CheckedItems.Count > 0)
+            if (modelsListView.CheckedItems.Count > 0 || getModelsFromDirectories)
             {
                 GetFileNameForm fnForm = new GetFileNameForm();
-                fnForm.GetFileName += getFileNameForm_ButtonClick;
+                fnForm.GetFileNameEvent += onGetFileNameForm_ButtonClick;
                 fnForm.ShowDialog();                
             }
             else
@@ -119,7 +137,7 @@ namespace ModelTransfer
         #region Region - zdarzenia wywołane przez interakcję użytkownika w innych formatkach, mające wpływ na akcje tej formatki
 
         //formatka GetFileNameForm
-        private void getFileNameForm_ButtonClick(object sender, MyEventArgs args)
+        private void onGetFileNameForm_ButtonClick(object sender, MyEventArgs args)
         {
             List<Model2D> selectedModels = readSelectedModelsFromDB();
             saveModelsToFile(selectedModels, args.fileName);
@@ -128,7 +146,7 @@ namespace ModelTransfer
 
 
         //formatka GetDirectoryAndUserForm
-        private void getUserAndDirectory_ButtonClick(object sender, MyEventArgs args)
+        private void onGetUserAndDirectory_ButtonClick(object sender, MyEventArgs args)
         {
             List<Model2D> models = readModelsFromFile();
             if (models != null)
@@ -138,6 +156,29 @@ namespace ModelTransfer
             else
             {
                 MyMessageBox.display("Nie można było odczytać pliku źródłowego", MessageBoxType.Error);
+            }
+        }
+
+
+        private void onTreeviewDirectorySelected(object sender, MyEventArgs args)
+        {
+            populateModelListview(args.selectedDirectoryId);
+        }
+
+
+        private void onTreeviewDirectoryChecked(object sender, MyEventArgs args)
+        {
+            if (args.checkedDirectoriesExist)
+            {
+                modelsListView.Enabled = false;
+                getModelsFromDirectories = true;
+                toolStripSaveToFileButton.Enabled = true;
+            }
+            else
+            {
+                modelsListView.Enabled = true;
+                getModelsFromDirectories = false;
+                toolStripSaveToFileButton.Enabled = false;
             }
         }
 
@@ -155,24 +196,11 @@ namespace ModelTransfer
         }
 
 
-        private void setupThisForm()
-        {
-            if (establishConnection())
-            {
-                directoryTreeControl1.directorySelectedEvent += onDirectorySelected_treeViewNodeSelected;
-                directoryTreeControl1.setUpTreeview(reader);
-            }
-        }
-
-        private void onDirectorySelected_treeViewNodeSelected(object sender, MyEventArgs args)
-        {
-            populateModelListview(args.selectedDirectoryId);
-        }
 
         private void populateModelListview(string selectedDirectoryId)
         {
             modelsListView.Items.Clear();
-            string queryFilter = SqlQueries.getModelsByDirectory + selectedDirectoryId;
+            string queryFilter = SqlQueries.getModelsByDirectoryFilter + selectedDirectoryId;
             QueryData modelData = readModelsFromDB(queryFilter);
                 if (modelData.getHeaders().Count > 0)
                 {
@@ -190,17 +218,14 @@ namespace ModelTransfer
         }
 
 
-
         private List<Model2D> readSelectedModelsFromDB()
         {
+
             List<Model2D> selectedModels = new List<Model2D>();
-            string modelIds = "";
-            foreach (ListViewItem checkedModel in modelsListView.CheckedItems)
-            {
-                modelIds += (checkedModel.Text + ",");
-            }
-            int index = modelIds.LastIndexOf(",");
-            string queryFilter = SqlQueries.getModelsByIdFilter.Replace("@iDs", modelIds.Remove(index, 1));
+            string selectedModelIds = getSelectedModelIds();;
+            
+            string queryFilter = SqlQueries.getModelsByIdFilter.Replace("@iDs", selectedModelIds);
+
             QueryData modelData = readModelsFromDB(queryFilter);
             List<object[]> models = modelData.getQueryData();
             List<string> paramTypes = modelData.getDataTypes();
@@ -234,16 +259,55 @@ namespace ModelTransfer
                 model2D.opisModel = model[SqlQueries.getModels_opisModelIndex];
                 model2D.opisModel_dataType = paramTypes[SqlQueries.getModels_opisModelIndex];
 
+                ModelDirectory modelDir;
+                directoryTreeControl1.checkedDirectories.TryGetValue(model2D.directoryId.ToString(), out modelDir);
+                model2D.modelDir = modelDir;
+
                 readPowierzchniaFromDB(model2D);
                 selectedModels.Add(model2D);
             }
             return selectedModels;
         }
 
+        private string getSelectedModelIds()
+        {
+            string modelIds = "";
+            if (getModelsFromDirectories)
+            {
+                ModelDirectory modelDir;
+                foreach(string dirId in directoryTreeControl1.checkedDirectories.Keys)
+                {
+                    directoryTreeControl1.checkedDirectories.TryGetValue(dirId, out modelDir);
+                    List<object> modelIdsInDirList = reader.readFromDB(SqlQueries.getModels + SqlQueries.getModelsByDirectoryFilter + modelDir.id).getColumnDataAsList(SqlQueries.getModels_idModelIndex);
+                    foreach(object modelId in modelIdsInDirList)
+                    {
+                        modelIds += modelId.ToString() + ",";
+                    } 
+                }
+            }
+            else
+            {
+                foreach (ListViewItem checkedModel in modelsListView.CheckedItems)
+                {
+                    modelIds += (checkedModel.Text + ",");
+                }
+            }
+            int index = modelIds.LastIndexOf(",");
+            return modelIds.Remove(index, 1);
+        }
 
         private void readPowierzchniaFromDB(Model2D model)
         {
-            string query = SqlQueries.getPowierzchnie + SqlQueries.getPowierzchnie_FilterAllInModel + model.idModel;
+            string query = "";
+            if (saveModelOptionsCombo.SelectedIndex == 0)
+            {
+                query = SqlQueries.getPowierzchnieNoBlob + SqlQueries.getPowierzchnie_byIdModelFilter + model.idModel;
+            }
+            else
+            {
+                query = SqlQueries.getPowierzchnieFull + SqlQueries.getPowierzchnie_byIdModelFilter + model.idModel;
+            }
+
             QueryData powierzchnieData = reader.readFromDB(query);
             List<string> paramTypes = powierzchnieData.getDataTypes();
 
@@ -262,7 +326,7 @@ namespace ModelTransfer
                 pow.powierzchniaData = powierzchnieData.getQueryData()[i];
                 pow.columnHeaders = powierzchnieData.getHeaders();
                 pow.columnDataTypes = powierzchnieData.getDataTypes();
-                pow.powDataTable = reader.readFromDBToDataTable(SqlQueries.getPowierzchnie + SqlQueries.getPowierzchnie_FilterSingleById + pow.idPow);
+                pow.powDataTable = reader.readFromDBToDataTable(SqlQueries.getPowierzchnieNoBlob + SqlQueries.getPowierzchnie_byIdPowFilter + pow.idPow);
                 readPowierzchniaDataFromDB(pow);
                 model.addPowierzchnia(pow);
             }
@@ -277,10 +341,13 @@ namespace ModelTransfer
             points.pointData = reader.readFromDBToDataTable(query);
             pow.points = points;
 
-            ModelTriangles triangles = new ModelTriangles();
-            query = SqlQueries.getTriangles + pow.idPow;
-            triangles.triangleData = reader.readFromDBToDataTable(query);
-            pow.triangles = triangles;
+            if (saveModelOptionsCombo.SelectedIndex == 1)           //tj pełne modele, tylko wtedy wczytuję trójkąty
+            {
+                ModelTriangles triangles = new ModelTriangles();
+                query = SqlQueries.getTriangles + pow.idPow;
+                triangles.triangleData = reader.readFromDBToDataTable(query);
+                pow.triangles = triangles;                
+            }
 
             ModelLinie breaklines = new ModelLinie();
             query = SqlQueries.getBreaklines + pow.idPow;
@@ -395,7 +462,7 @@ namespace ModelTransfer
         private void writePowierzchniaToDB(Model2D model)
         {
             uint maxPowId = 0;
-            string tableName = dbConnector.getTableNameFromQuery(SqlQueries.getPowierzchnie);
+            string tableName = dbConnector.getTableNameFromQuery(SqlQueries.getPowierzchnieNoBlob);
 
             for(int i=0; i < model.powierzchnieList.Count; i++)
             {

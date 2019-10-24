@@ -26,7 +26,7 @@ namespace ModelTransfer
             InitializeComponent();
             directoryTreeControl1.directorySelectedEvent += onDirectorySelected_TreeViewNodeSelected;
             populateUserListview();
-            directoryTreeControl1.setUpTreeview(reader);
+            directoryTreeControl1.setUpThisForm(reader);
         }
 
         private void onDirectorySelected_TreeViewNodeSelected(object sender, MyEventArgs args)

@@ -14,9 +14,15 @@ namespace ModelTransfer
         [STAThread]
         static void Main(string[] args)
         {
+            try { 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new MainForm(args[0], args[1]));
         }
+            catch(IndexOutOfRangeException ex)
+            {
+                MyMessageBox.display(ex.Message + "  \r\nniewłaściwa liczba parametrów w pliku bat", MessageBoxType.Error);
+            }
+}
     }
 }

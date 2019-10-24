@@ -39,6 +39,8 @@ namespace ModelTransfer
 
         public List<Powierzchnia> powierzchnieList { get; }
 
+        public ModelDirectory modelDir  {get; set;}
+
 
 
         #endregion
