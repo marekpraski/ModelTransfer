@@ -32,12 +32,16 @@
             this.button1 = new System.Windows.Forms.Button();
             this.userListView = new System.Windows.Forms.ListView();
             this.directoryTreeControl1 = new ModelTransfer.DirectoryTreeControl();
+            this.restoreTreeRadioButton = new System.Windows.Forms.RadioButton();
+            this.saveToOneFolderRadioButton = new System.Windows.Forms.RadioButton();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(231, 12);
+            this.label2.Location = new System.Drawing.Point(230, 55);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(98, 13);
             this.label2.TabIndex = 3;
@@ -45,7 +49,7 @@
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(179, 320);
+            this.button1.Location = new System.Drawing.Point(178, 363);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(75, 23);
             this.button1.TabIndex = 4;
@@ -56,7 +60,7 @@
             // userListView
             // 
             this.userListView.HideSelection = false;
-            this.userListView.Location = new System.Drawing.Point(231, 36);
+            this.userListView.Location = new System.Drawing.Point(230, 79);
             this.userListView.MultiSelect = false;
             this.userListView.Name = "userListView";
             this.userListView.Size = new System.Drawing.Size(190, 278);
@@ -66,22 +70,59 @@
             // 
             // directoryTreeControl1
             // 
-            this.directoryTreeControl1.Location = new System.Drawing.Point(12, 12);
+            this.directoryTreeControl1.Location = new System.Drawing.Point(11, 55);
             this.directoryTreeControl1.Name = "directoryTreeControl1";
             this.directoryTreeControl1.Size = new System.Drawing.Size(213, 302);
             this.directoryTreeControl1.TabIndex = 6;
+            // 
+            // restoreTreeRadioButton
+            // 
+            this.restoreTreeRadioButton.AutoSize = true;
+            this.restoreTreeRadioButton.Checked = true;
+            this.restoreTreeRadioButton.Location = new System.Drawing.Point(6, 19);
+            this.restoreTreeRadioButton.Name = "restoreTreeRadioButton";
+            this.restoreTreeRadioButton.Size = new System.Drawing.Size(151, 17);
+            this.restoreTreeRadioButton.TabIndex = 7;
+            this.restoreTreeRadioButton.TabStop = true;
+            this.restoreTreeRadioButton.Text = "odtwórz drzewo katalogów";
+            this.restoreTreeRadioButton.UseVisualStyleBackColor = true;
+            this.restoreTreeRadioButton.CheckedChanged += new System.EventHandler(this.restoreTreeRadioButton_CheckedChanged);
+            // 
+            // saveToOneFolderRadioButton
+            // 
+            this.saveToOneFolderRadioButton.AutoSize = true;
+            this.saveToOneFolderRadioButton.Location = new System.Drawing.Point(167, 19);
+            this.saveToOneFolderRadioButton.Name = "saveToOneFolderRadioButton";
+            this.saveToOneFolderRadioButton.Size = new System.Drawing.Size(154, 17);
+            this.saveToOneFolderRadioButton.TabIndex = 8;
+            this.saveToOneFolderRadioButton.Text = "zapisz do jednego katalogu";
+            this.saveToOneFolderRadioButton.UseVisualStyleBackColor = true;
+            this.saveToOneFolderRadioButton.CheckedChanged += new System.EventHandler(this.SaveToOneFolderRadioButton_CheckedChanged);
+            // 
+            // groupBox1
+            // 
+            this.groupBox1.Controls.Add(this.restoreTreeRadioButton);
+            this.groupBox1.Controls.Add(this.saveToOneFolderRadioButton);
+            this.groupBox1.Location = new System.Drawing.Point(11, 3);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(409, 46);
+            this.groupBox1.TabIndex = 9;
+            this.groupBox1.TabStop = false;
             // 
             // GetDirectoryAndUserForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(432, 353);
+            this.ClientSize = new System.Drawing.Size(432, 392);
+            this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.directoryTreeControl1);
             this.Controls.Add(this.userListView);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.label2);
             this.Name = "GetDirectoryAndUserForm";
             this.Text = "Wybór katalogu i właściciela modeli";
+            this.groupBox1.ResumeLayout(false);
+            this.groupBox1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -92,5 +133,8 @@
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.ListView userListView;
         private DirectoryTreeControl directoryTreeControl1;
+        private System.Windows.Forms.RadioButton restoreTreeRadioButton;
+        private System.Windows.Forms.RadioButton saveToOneFolderRadioButton;
+        private System.Windows.Forms.GroupBox groupBox1;
     }
 }

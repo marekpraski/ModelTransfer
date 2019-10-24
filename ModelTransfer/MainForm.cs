@@ -108,9 +108,9 @@ namespace ModelTransfer
 
         private void SaveToDBButton_Click(object sender, EventArgs e)
         {
-            GetDirectoryAndUserForm getDir = new GetDirectoryAndUserForm(reader);
-            getDir.acceptButtonClickedEvent += onGetUserAndDirectory_ButtonClick;
-            getDir.ShowDialog();
+            GetDirectoryAndUserForm getDirectoryAndUser = new GetDirectoryAndUserForm(reader);
+            getDirectoryAndUser.acceptButtonClickedEvent += onGetUserAndDirectory_ButtonClick;
+            getDirectoryAndUser.ShowDialog();
             
         }
 
@@ -148,10 +148,10 @@ namespace ModelTransfer
         //formatka GetDirectoryAndUserForm
         private void onGetUserAndDirectory_ButtonClick(object sender, MyEventArgs args)
         {
-            List<Model2D> models = readModelsFromFile();
+            ModelBundle models = readModelsFromFile();
             if (models != null)
             {
-                writeModelsToDB(models, args.selectedDirectoryId, args.selectedUserId);
+                writeModelsToDB(models, args);
             }
             else
             {
@@ -363,6 +363,9 @@ namespace ModelTransfer
 
         private void saveModelsToFile(List<Model2D> selectedModels, string fileName)
         {
+            ModelBundle modelBundle = new ModelBundle();
+            modelBundle.models = selectedModels;
+            modelBundle.checkedDirectories = directoryTreeControl1.checkedDirectories;
             string fileSaveDir = currentPath;
 
             if (fileName == null || fileName == "")
@@ -371,7 +374,7 @@ namespace ModelTransfer
             }
             else
             {
-               fileName = "modele.bin"; //+= ".bin";
+               fileName += ".bin";
             }
 
             string serializationFile = Path.Combine(fileSaveDir, fileName);
@@ -381,7 +384,7 @@ namespace ModelTransfer
             {
                 var bformatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
 
-                bformatter.Serialize(stream, selectedModels);
+                bformatter.Serialize(stream, modelBundle);
             }
         }
 
@@ -390,12 +393,12 @@ namespace ModelTransfer
 
         #region Region - czytanie modeli z pliku binarnego i zapisywanie do bazy danych
 
-        private List<Model2D> readModelsFromFile()
+        private ModelBundle readModelsFromFile()
         {
             FileManipulator fm = new FileManipulator();
             string fileName = "modele.bin";
             string filePath = currentPath;
-            List<Model2D> models = new List<Model2D>();
+            ModelBundle models = new ModelBundle();
 
             try
             {
@@ -406,7 +409,7 @@ namespace ModelTransfer
                     {
                         var bformatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
 
-                        models = (List<Model2D>)bformatter.Deserialize(stream);
+                        models = (ModelBundle)bformatter.Deserialize(stream);
                     }
                 }
             }
@@ -419,26 +422,48 @@ namespace ModelTransfer
         }
 
 
-        private void writeModelsToDB(List<Model2D> models, string newDirectoryId, string newIdWlasciciel)
+        private void writeModelsToDB(ModelBundle modelBundle, MyEventArgs args)
         {
+            List<Model2D> models = modelBundle.models;
+
+            Dictionary<string, ModelDirectory> checkedDirectories = modelBundle.checkedDirectories;
+
             writer = new DBWriter(dbConnection);
             DBValueTypeConverter converter = new DBValueTypeConverter();
             int maxModelIdInDB = 0;
 
+            string newDirectoryId = "";
+            string newIdWlasciciel = args.selectedUserId;
+
+            bool restoreDirectoryTree = args.restoreDirectoryTree;
+
             string newCzyArch = "0";        //wczytywane modele nie będą archiwalne
             string newIdUzytk = "null";     //wczytywane modele nie będą oznaczone jako wczytane do pamięci
 
-
+            if (restoreDirectoryTree && checkedDirectories.Count>0)
+            {
+                writeDirectoryTreeToDB(checkedDirectories, args.selectedDirectoryId);
+            }
+            
             //po kolei wpisuję deklaracje wszystkich modeli, po jednym, do tabeli DefModel2D
-            for(int i =0; i< models.Count; i++)
+            for (int i = 0; i < models.Count; i++)
             {
                 Model2D model = models[i];
-                
+
                 string nazwaModel = converter.getConvertedValue(model.nazwaModel, model.nazwaModel_dataType);
                 string opisModel = converter.getConvertedValue(model.opisModel, model.opisModel_dataType);
                 string dataModel = converter.getConvertedValue(model.dataModel, model.dataModel_dataType);
 
-                string query = SqlQueries.insertModel.Replace("@nazwaModel", nazwaModel).Replace("@opisModel", opisModel).Replace("@dataModel", dataModel).Replace("@idUzytk", newIdUzytk).Replace("@czyArch", newCzyArch).Replace("@directoryId", newDirectoryId.ToString()).Replace("@idWlasciciel", newIdWlasciciel.ToString());
+            if(restoreDirectoryTree && checkedDirectories.Count > 0)
+            {
+                newDirectoryId = model.modelDir.newId;
+            }
+            else
+            {
+                newDirectoryId = args.selectedDirectoryId;
+            }
+
+                string query = SqlQueries.insertModel.Replace("@nazwaModel", nazwaModel).Replace("@opisModel", opisModel).Replace("@dataModel", dataModel).Replace("@idUzytk", newIdUzytk).Replace("@czyArch", newCzyArch).Replace("@directoryId", newDirectoryId).Replace("@idWlasciciel", newIdWlasciciel);
                 writer.writeToDB(query);
 
                 if (i == 0)         //wpis modelu robię przez insert, baza danych automatycznie nadaje mu ID, które teraz odczytuję
@@ -456,7 +481,62 @@ namespace ModelTransfer
                 //po zapisaniu deklaracji modelu zapisuję dane szczegółowe tego modelu, tzn powierzchnie itp, które są w osobnych tablicach
                 writePowierzchniaToDB(model);
             }
+            
             MyMessageBox.display("Modele wczytane");
+            directoryTreeControl1.resetThisForm();
+            directoryTreeControl1.setUpThisForm(reader);
+        }
+
+
+        private void writeDirectoryTreeToDB(Dictionary<string, ModelDirectory> checkedDirectories, string selectedRootDirId)
+        {
+            ModelDirectory dir;
+            ModelDirectory parentDir;
+            int maxDirectoryIdInDB = 0;
+            int i = 0;
+            foreach(string dirId in checkedDirectories.Keys)
+            {
+                checkedDirectories.TryGetValue(dirId, out dir);
+                string query = SqlQueries.insertDirectory.Replace("@directoryName", dir.name);
+                writer.writeToDB(query);
+
+                if (i == 0)         //wpis robię przez insert, baza danych automatycznie nadaje kolejne ID, które teraz odczytuję
+                {
+                    maxDirectoryIdInDB = getMaxDirectoryIdFromDB();
+                }
+                else
+                {
+                    maxDirectoryIdInDB++;       //kolejne modele będą miały kolejne ID, nie muszę za każdym razem czytać tylko inkrementuję
+                }
+                dir.newId = maxDirectoryIdInDB.ToString();
+                i++;
+            }
+
+            //id parenta każdego katalogu aktualizuję dopiero wtedy  gdy już dodam wszystkie katalogi do bazy i mają one przypisane nowe id
+
+            foreach(string dirId in checkedDirectories.Keys)
+            {
+                checkedDirectories.TryGetValue(dirId, out dir);
+                string query;
+                if (dir.parentId != null && dir.parentId !="")
+                {
+                    checkedDirectories.TryGetValue(dir.parentId, out parentDir);
+                    query = SqlQueries.updateDirectoryParentId.Replace("@newParentId", parentDir.newId) + dir.newId;
+                }
+                else
+                {
+                        //jeżeli parent był null, to podpinam ten katalog pod wybrany przez użytkownika
+                    query = SqlQueries.updateDirectoryParentId.Replace("@newParentId", selectedRootDirId) + dir.newId;
+                }
+                writer.writeToDB(query);
+            }
+        }
+
+        private int getMaxDirectoryIdFromDB()
+        {
+            string query = SqlQueries.getMaxDirectoryId;
+            QueryData res = reader.readFromDB(query);
+            return int.Parse(res.getQueryData()[0][0].ToString());
         }
 
         private void writePowierzchniaToDB(Model2D model)
@@ -511,9 +591,12 @@ namespace ModelTransfer
 
             tableName = dbConnector.getTableNameFromQuery(SqlQueries.getTriangles);
             ModelTriangles triangles = pow.triangles;
-            if (triangles.setNewIdPow(newIdPow))
+            if (triangles != null)                              //jest null jeżeli zapisuję same punkty
             {
-                writer.writeBulkDataToDB(triangles.triangleData, tableName);
+                if (triangles.setNewIdPow(newIdPow))
+                {
+                    writer.writeBulkDataToDB(triangles.triangleData, tableName);
+                }
             }
 
             tableName = dbConnector.getTableNameFromQuery(SqlQueries.getGrids);

@@ -11,16 +11,24 @@ namespace ModelTransfer
     {
 
         //
-        //pobieranie danych modeli
+        //pobieranie danych 
         //
 
 
+        //katalogi
+        //
+            
         public static string getDirectories = "select DirectoryId, DirectoryName, ParentDirectoryId from ModelDirectories where Archiwum = 0 and DirectoryId>1 ";
 
         public static short getDirectories_directoryIdIndex = 0;
         public static short getDirectories_directoryNameIndex = 1;
         public static short getDirectories_parentIdIndex = 2;
 
+        public static string getMaxDirectoryId = "select max(DirectoryId) as maxDirId from ModelDirectories";
+
+
+        //modele
+        //
 
         public static string getModels = "select IDModel, NazwaModel, OpisModel, DataModel, IDUzytk, CzyArch, DirectoryId, IDUzytkWlasciciel from DefModel2D ";
         public static string getModelsByIdFilter = "where IDModel in(@iDs)";
@@ -40,6 +48,9 @@ namespace ModelTransfer
         public static string getMaxModelId = "select MAX(IDModel) as maxModelId from DefModel2D"; 
 
 
+        //powierzchnie
+        //
+
         public static string getPowierzchnieNoBlob = "select IDPow, IDModel, NazwaSkr, NazwaPow, Promien, PoczWspY, PoczWspX, RozmOczekY, RozmOczekX, LbaOczekY, LbaOczekX, IlPkt, IlSektor, Wykladnik, null as PowObrys, " +
                                                 "DataPowierzchni, null as dane_bin, dane_bin_rozmiar, null as dane_bin_index, dane_bin_index_rozmiar, minZ, maxZ, ileTri, ileGrd from DefPowierzchni  ";
 
@@ -57,7 +68,9 @@ namespace ModelTransfer
 
         public static string getMaxPowierzchniaId = "select MAX(IDPow) as maxPowId from DefPowierzchni ";
 
-
+        //
+        //punkty i pozostałe dane
+        //
 
         public static string getPoints = "select IDPunkty, WspX, WspY, Rzedna, IDPow from Model_punkty where IDPow = ";
         public static int getPoints_idPowIndex = 4;

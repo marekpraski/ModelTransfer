@@ -12,6 +12,7 @@ namespace ModelTransfer
         public string selectedDirectoryId { get; set; }
         public string selectedUserId { get; set; }
         public bool checkedDirectoriesExist { get; set; }
+        public bool restoreDirectoryTree { get; set; }
 
         public MyEventArgs()
         {

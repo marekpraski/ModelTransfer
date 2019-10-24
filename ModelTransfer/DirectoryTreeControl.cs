@@ -19,6 +19,7 @@ namespace ModelTransfer
 
         public Dictionary<string, ModelDirectory> checkedDirectories { get; }       //kluczem jest id
 
+
         public delegate void DirectorySelectedEventHandler(object sender, MyEventArgs args);
         public event DirectorySelectedEventHandler directorySelectedEvent;
 
@@ -32,10 +33,19 @@ namespace ModelTransfer
             checkedDirectories = new Dictionary<string, ModelDirectory>();
         }
 
+
         public void setUpThisForm(DBReader reader)
         {
             getDirectories(reader);
             populateTreeview();
+        }
+
+        public void resetThisForm()
+        {
+            treeView1.Nodes.Clear();
+            checkedDirectories.Clear();
+            directoryDict.Clear();
+            baseTreeDirectories.Clear();
         }
 
         public void turnTreeviewCheckboxesOn()

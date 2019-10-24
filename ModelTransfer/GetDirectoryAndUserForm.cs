@@ -57,6 +57,8 @@ namespace ModelTransfer
                 ListViewItem item = userListView.SelectedItems[0];          //multiselect = false
                 selectedUserId = item.Name;
                 onAcceptButtonClick();
+                this.Close();
+                this.Dispose();
             }
             else
             {
@@ -71,8 +73,26 @@ namespace ModelTransfer
                 MyEventArgs args = new MyEventArgs();
                 args.selectedDirectoryId = this.selectedDirId;
                 args.selectedUserId = this.selectedUserId;
+                if(restoreTreeRadioButton.Checked == true)
+                {
+                    args.restoreDirectoryTree = true;
+                }
+                else
+                {
+                    args.restoreDirectoryTree = false;
+                }
                 acceptButtonClickedEvent(this, args);
             }
+        }
+
+        private void restoreTreeRadioButton_CheckedChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void SaveToOneFolderRadioButton_CheckedChanged(object sender, EventArgs e)
+        {
+
         }
     }
 }
