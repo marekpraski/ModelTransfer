@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
+using System.Diagnostics;
 
 namespace ModelTransfer
 {
@@ -33,6 +34,13 @@ namespace ModelTransfer
         private string[] modelSaveOptions = { "same punkty", "pełne modele" };
 
 
+        private MyEventArgs myEventArgs;
+        private BackgroundWorker bgw;
+
+        private ModelBundle modelBundle;
+
+        string timeLog = "";
+
 
         public MainForm(string login, string pass)
         {
@@ -47,8 +55,10 @@ namespace ModelTransfer
         {
             if (establishConnection())
             {
+                hideProgressItems();
                 directoryTreeControl1.directorySelectedEvent += onTreeviewDirectorySelected;
                 directoryTreeControl1.directoryCheckedEvent += onTreeviewDirectoryChecked;
+
                 saveModelOptionsCombo.Items.AddRange(modelSaveOptions);
                 saveModelOptionsCombo.SelectedIndex = 0;
                 directoryTreeControl1.turnTreeviewCheckboxesOn();
@@ -56,6 +66,7 @@ namespace ModelTransfer
             }
         }
 
+       
 
 
         #region Region - start programu, połączenie z bazą danych
@@ -148,16 +159,79 @@ namespace ModelTransfer
         //formatka GetDirectoryAndUserForm
         private void onGetUserAndDirectory_ButtonClick(object sender, MyEventArgs args)
         {
-            ModelBundle models = readModelsFromFile();
-            if (models != null)
+            this.myEventArgs = args;
+            showProgressItems();          //nie można ukrywać/pokazywać elementow gdy bgw pracuje, nie zrobi wtedy nic
+
+            bgw = new BackgroundWorker();
+            bgw.DoWork += new DoWorkEventHandler(bgw_writeModelsToDB);
+            bgw.ProgressChanged += new ProgressChangedEventHandler(bgw_ProgressChanged);
+            bgw.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgw_RunWorkerCompleted);
+            bgw.WorkerReportsProgress = true;
+
+            bgw.RunWorkerAsync();
+
+        }
+
+        void bgw_writeModelsToDB(object sender, DoWorkEventArgs e)
+        {
+            readModelsFromFile();
+
+            if (modelBundle != null)
             {
-                writeModelsToDB(models, args);
+                writeModelsToDB();
             }
             else
             {
-                MyMessageBox.display("Nie można było odczytać pliku źródłowego", MessageBoxType.Error);
+                MyMessageBox.display("Nie można było odczytać modeli z pliku źródłowego", MessageBoxType.Error);
             }
+
         }
+
+
+
+
+        #region Region - obsługa paska postępu
+
+        private void hideProgressItems()
+        {
+            label1.Visible = false;
+            label2.Visible = false;
+            progressBar1.Visible = false;
+            groupBox1.Visible = false;
+        }
+
+
+        private void showProgressItems()
+        {
+            groupBox1.Visible = true;
+            label1.Visible = true;
+            label1.Text = "wczytuję pliki z dysku";
+            label2.Visible = true;
+            label2.Text = "";
+            progressBar1.Visible = true;
+        }
+
+
+
+        void bgw_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        {
+            progressBar1.Value = e.ProgressPercentage;
+            groupBox1.Text = "zapisuję modele do bazy danych";
+            label1.Text = String.Format("Postęp: {0} %", e.ProgressPercentage);
+            label2.Text = String.Format("Zapisanych modeli: {0}", int.Parse(e.UserState.ToString()) + 1);
+        }
+
+
+        void bgw_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            hideProgressItems();
+        }
+
+
+
+        #endregion
+
+
 
 
         private void onTreeviewDirectorySelected(object sender, MyEventArgs args)
@@ -393,36 +467,43 @@ namespace ModelTransfer
 
         #region Region - czytanie modeli z pliku binarnego i zapisywanie do bazy danych
 
-        private ModelBundle readModelsFromFile()
+        private void readModelsFromFile()
         {
             FileManipulator fm = new FileManipulator();
             string fileName = "modele.bin";
             string filePath = currentPath;
-            ModelBundle models = new ModelBundle();
+            modelBundle = new ModelBundle();
 
+            FileInfo fileInfo; 
+            long length;
             try
             {
+            var sw = Stopwatch.StartNew();
                 if (fm.assertFileExists(filePath + @"\" + fileName))
                 {
+                    fileInfo = new FileInfo(filePath + @"\" + fileName);
+                    length = fileInfo.Length;
+                    long currentPosition = 0;
+
                     //deserialize
                     using (Stream stream = File.Open(filePath + @"\" + fileName, FileMode.Open))
                     {
                         var bformatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
-
-                        models = (ModelBundle)bformatter.Deserialize(stream);
+                        modelBundle = (ModelBundle)bformatter.Deserialize(stream);
                     }
                 }
+                sw.Stop();
+                timeLog += sw.Elapsed + "  czytanie pliku";
             }
             catch (ArgumentException ex)
             {
                 MyMessageBox.display(ex.Message, MessageBoxType.Error);
-                return null;
             }
-            return models;
         }
 
 
-        private void writeModelsToDB(ModelBundle modelBundle, MyEventArgs args)
+
+        private void writeModelsToDB()
         {
             List<Model2D> models = modelBundle.models;
 
@@ -433,21 +514,26 @@ namespace ModelTransfer
             int maxModelIdInDB = 0;
 
             string newDirectoryId = "";
-            string newIdWlasciciel = args.selectedUserId;
+            string newIdWlasciciel = myEventArgs.selectedUserId;
 
-            bool restoreDirectoryTree = args.restoreDirectoryTree;
+            bool restoreDirectoryTree = myEventArgs.restoreDirectoryTree;
 
             string newCzyArch = "0";        //wczytywane modele nie będą archiwalne
             string newIdUzytk = "null";     //wczytywane modele nie będą oznaczone jako wczytane do pamięci
 
             if (restoreDirectoryTree && checkedDirectories.Count>0)
             {
-                writeDirectoryTreeToDB(checkedDirectories, args.selectedDirectoryId);
+                writeDirectoryTreeToDB(checkedDirectories, myEventArgs.selectedDirectoryId);
             }
-            
+
+            int modelsTotal = models.Count-1;       //do paska postępu
             //po kolei wpisuję deklaracje wszystkich modeli, po jednym, do tabeli DefModel2D
             for (int i = 0; i < models.Count; i++)
             {
+                //do paska psotępu
+                int percents = (i * 100) / modelsTotal;
+                bgw.ReportProgress(percents, i);
+
                 Model2D model = models[i];
 
                 string nazwaModel = converter.getConvertedValue(model.nazwaModel, model.nazwaModel_dataType);
@@ -460,7 +546,7 @@ namespace ModelTransfer
             }
             else
             {
-                newDirectoryId = args.selectedDirectoryId;
+                newDirectoryId = myEventArgs.selectedDirectoryId;
             }
 
                 string query = SqlQueries.insertModel.Replace("@nazwaModel", nazwaModel).Replace("@opisModel", opisModel).Replace("@dataModel", dataModel).Replace("@idUzytk", newIdUzytk).Replace("@czyArch", newCzyArch).Replace("@directoryId", newDirectoryId).Replace("@idWlasciciel", newIdWlasciciel);
@@ -481,7 +567,7 @@ namespace ModelTransfer
                 //po zapisaniu deklaracji modelu zapisuję dane szczegółowe tego modelu, tzn powierzchnie itp, które są w osobnych tablicach
                 writePowierzchniaToDB(model);
             }
-            
+
             MyMessageBox.display("Modele wczytane");
             directoryTreeControl1.resetThisForm();
             directoryTreeControl1.setUpThisForm(reader);
@@ -626,5 +712,9 @@ namespace ModelTransfer
 
         #endregion
 
+        private void Timer1_Tick(object sender, EventArgs e)
+        {
+            this.progressBar1.Increment(1);
+        }
     }
 }

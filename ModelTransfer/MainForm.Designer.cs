@@ -28,19 +28,26 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.modelsListView = new System.Windows.Forms.ListView();
             this.modelIdColHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.modelNameColHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.toolStripSaveToFileButton = new System.Windows.Forms.ToolStripButton();
-            this.modelsFromFileButton = new System.Windows.Forms.ToolStripButton();
-            this.helpButton = new System.Windows.Forms.ToolStripButton();
-            this.directoryTreeControl1 = new ModelTransfer.DirectoryTreeControl();
-            this.label1 = new System.Windows.Forms.Label();
             this.saveModelOptionsCombo = new System.Windows.Forms.ToolStripComboBox();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.modelsFromFileButton = new System.Windows.Forms.ToolStripButton();
+            this.helpButton = new System.Windows.Forms.ToolStripButton();
+            this.chooseModelsLabel = new System.Windows.Forms.Label();
+            this.progressBar1 = new System.Windows.Forms.ProgressBar();
+            this.timer1 = new System.Windows.Forms.Timer(this.components);
+            this.label1 = new System.Windows.Forms.Label();
+            this.label2 = new System.Windows.Forms.Label();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.directoryTreeControl1 = new ModelTransfer.DirectoryTreeControl();
             this.toolStrip1.SuspendLayout();
+            this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
             // modelsListView
@@ -94,6 +101,16 @@
             this.toolStripSaveToFileButton.ToolTipText = "zapisz modele do pliku";
             this.toolStripSaveToFileButton.Click += new System.EventHandler(this.SaveToFileButton_Click);
             // 
+            // saveModelOptionsCombo
+            // 
+            this.saveModelOptionsCombo.Name = "saveModelOptionsCombo";
+            this.saveModelOptionsCombo.Size = new System.Drawing.Size(121, 25);
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 25);
+            // 
             // modelsFromFileButton
             // 
             this.modelsFromFileButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
@@ -114,6 +131,55 @@
             this.helpButton.ToolTipText = "pomoc";
             this.helpButton.Click += new System.EventHandler(this.HelpButton_Click);
             // 
+            // chooseModelsLabel
+            // 
+            this.chooseModelsLabel.AutoSize = true;
+            this.chooseModelsLabel.Location = new System.Drawing.Point(232, 29);
+            this.chooseModelsLabel.Name = "chooseModelsLabel";
+            this.chooseModelsLabel.Size = new System.Drawing.Size(79, 13);
+            this.chooseModelsLabel.TabIndex = 3;
+            this.chooseModelsLabel.Text = "wybierz modele";
+            // 
+            // progressBar1
+            // 
+            this.progressBar1.Location = new System.Drawing.Point(205, 16);
+            this.progressBar1.Name = "progressBar1";
+            this.progressBar1.Size = new System.Drawing.Size(238, 23);
+            this.progressBar1.TabIndex = 4;
+            // 
+            // timer1
+            // 
+            this.timer1.Tick += new System.EventHandler(this.Timer1_Tick);
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(6, 26);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(35, 13);
+            this.label1.TabIndex = 5;
+            this.label1.Text = "label1";
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(73, 26);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(35, 13);
+            this.label2.TabIndex = 6;
+            this.label2.Text = "label2";
+            // 
+            // groupBox1
+            // 
+            this.groupBox1.Controls.Add(this.label1);
+            this.groupBox1.Controls.Add(this.progressBar1);
+            this.groupBox1.Controls.Add(this.label2);
+            this.groupBox1.Location = new System.Drawing.Point(20, 206);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(449, 55);
+            this.groupBox1.TabIndex = 7;
+            this.groupBox1.TabStop = false;
+            // 
             // directoryTreeControl1
             // 
             this.directoryTreeControl1.Location = new System.Drawing.Point(12, 28);
@@ -121,31 +187,13 @@
             this.directoryTreeControl1.Size = new System.Drawing.Size(213, 302);
             this.directoryTreeControl1.TabIndex = 2;
             // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(232, 29);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(79, 13);
-            this.label1.TabIndex = 3;
-            this.label1.Text = "wybierz modele";
-            // 
-            // saveModelOptionsCombo
-            // 
-            this.saveModelOptionsCombo.Name = "saveModelOptionsCombo";
-            this.saveModelOptionsCombo.Size = new System.Drawing.Size(121, 25);
-            // 
-            // toolStripSeparator1
-            // 
-            this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 25);
-            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(481, 343);
-            this.Controls.Add(this.label1);
+            this.Controls.Add(this.groupBox1);
+            this.Controls.Add(this.chooseModelsLabel);
             this.Controls.Add(this.directoryTreeControl1);
             this.Controls.Add(this.toolStrip1);
             this.Controls.Add(this.modelsListView);
@@ -153,6 +201,8 @@
             this.Text = "Modeler2D model transfer";
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
+            this.groupBox1.ResumeLayout(false);
+            this.groupBox1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -168,9 +218,14 @@
         private System.Windows.Forms.ToolStripButton modelsFromFileButton;
         private System.Windows.Forms.ToolStripButton helpButton;
         private DirectoryTreeControl directoryTreeControl1;
-        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label chooseModelsLabel;
         private System.Windows.Forms.ToolStripComboBox saveModelOptionsCombo;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ProgressBar progressBar1;
+        private System.Windows.Forms.Timer timer1;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.GroupBox groupBox1;
     }
 }
 
