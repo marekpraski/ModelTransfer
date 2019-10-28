@@ -33,6 +33,7 @@ namespace ModelTransfer
             checkedDirectories = new Dictionary<string, ModelDirectory>();
         }
 
+        #region Region - ustawienia tej formatki
 
         public void setUpThisForm(DBReader reader)
         {
@@ -52,6 +53,9 @@ namespace ModelTransfer
         {
             treeView1.CheckBoxes = true;
         }
+
+        #endregion
+
 
         #region Region - zdarzenia wywołane akcją użytkownika
 

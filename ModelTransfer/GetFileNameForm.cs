@@ -29,6 +29,7 @@ namespace ModelTransfer
             OnGetFileName();
             this.Close();
             this.Dispose();
+
         }
 
         protected virtual void OnGetFileName()
@@ -47,6 +48,7 @@ namespace ModelTransfer
             {
                 OnGetFileName();
                 this.Close();
+                this.Dispose();
             }
         }
 
@@ -56,6 +58,7 @@ namespace ModelTransfer
             {
                 OnGetFileName();
                 this.Close();
+                this.Dispose();
             }
         }
 

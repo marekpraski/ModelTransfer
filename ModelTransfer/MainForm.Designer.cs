@@ -142,9 +142,9 @@
             // 
             // progressBar1
             // 
-            this.progressBar1.Location = new System.Drawing.Point(205, 16);
+            this.progressBar1.Location = new System.Drawing.Point(215, 16);
             this.progressBar1.Name = "progressBar1";
-            this.progressBar1.Size = new System.Drawing.Size(238, 23);
+            this.progressBar1.Size = new System.Drawing.Size(228, 23);
             this.progressBar1.TabIndex = 4;
             // 
             // timer1
@@ -163,7 +163,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(73, 26);
+            this.label2.Location = new System.Drawing.Point(84, 26);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(35, 13);
             this.label2.TabIndex = 6;
@@ -174,7 +174,7 @@
             this.groupBox1.Controls.Add(this.label1);
             this.groupBox1.Controls.Add(this.progressBar1);
             this.groupBox1.Controls.Add(this.label2);
-            this.groupBox1.Location = new System.Drawing.Point(20, 206);
+            this.groupBox1.Location = new System.Drawing.Point(20, 227);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(449, 55);
             this.groupBox1.TabIndex = 7;
@@ -191,7 +191,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(481, 343);
+            this.ClientSize = new System.Drawing.Size(481, 336);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.chooseModelsLabel);
             this.Controls.Add(this.directoryTreeControl1);

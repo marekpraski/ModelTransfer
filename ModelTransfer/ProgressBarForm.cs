@@ -16,5 +16,11 @@ namespace ModelTransfer
         {
             InitializeComponent();
         }
+
+        public void onReceivingProgress(object sender, ProgressEventArgs args)
+        {
+            this.progressBar1.Value = args.progressPercentage;
+            this.label1.Text = args.labelText;
+        }
     }
 }

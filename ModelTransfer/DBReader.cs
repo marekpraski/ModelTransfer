@@ -12,6 +12,7 @@ namespace ModelTransfer
     {
         private SqlConnection dbConnection;
         private QueryData queryData;
+        private string log = "";
 
         public DBReader(SqlConnection dbConnection)
         {
@@ -21,16 +22,21 @@ namespace ModelTransfer
 
         public QueryData readFromDB(string sqlQuery)
         {
+            log += "\r\n1  " +sqlQuery;
             queryData = new QueryData();
 
             try
             {
-
+                log += "\r\n2";
                 SqlCommand sqlCommand = new SqlCommand(sqlQuery, dbConnection);
                 dbConnection.Open();
+
+                log += "\r\n3";
                 SqlDataReader sqlReader = sqlCommand.ExecuteReader();
 
                 int numberOfColumns = sqlReader.FieldCount;
+
+                log += "\r\n4";
 
                 while (sqlReader.Read())
                 {
@@ -47,14 +53,22 @@ namespace ModelTransfer
                     queryData.addHeader(sqlReader.GetName(i));
                     queryData.addDataType(sqlReader.GetDataTypeName(i));
                 }
+                log += "\r\n5";
 
                 sqlReader.Close();
+                log += "\r\n6";
                 sqlCommand.Dispose();
+                log += "\r\n7";
                 dbConnection.Close();
+                log += "\r\n8";
             }
             catch (System.Data.SqlClient.SqlException e)
             {
                 MyMessageBox.display(e.Message + "\r\n" + dbConnection.ConnectionString, MessageBoxType.Error);
+            }
+            catch (InvalidOperationException exc)
+            {
+               MyMessageBox.display(exc.Message + "  \r\n DBReader - readFromDb \r\n" + log);
             }
 
             return queryData;

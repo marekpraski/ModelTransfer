@@ -10,11 +10,14 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
 using System.Diagnostics;
+using System.Threading;
 
 namespace ModelTransfer
 {
     public partial class MainForm : Form
     {
+
+        #region Region - parametry
 
         private string userLogin = "";
         private string userPassword = "";
@@ -34,12 +37,26 @@ namespace ModelTransfer
         private string[] modelSaveOptions = { "same punkty", "pełne modele" };
 
 
-        private MyEventArgs myEventArgs;
+        //private MyEventArgs myEventArgs;
         private BackgroundWorker bgw;
 
-        private ModelBundle modelBundle;
+        private ModelBundle modelBundle;            //modele wczytane z pliku
+        private List<Model2D> selectedModels;       //modele wybrane przez użytkownika do zapisania w pliku
 
         string timeLog = "";
+
+        private Thread computationsThread;
+
+        private int saveModelOption = 0;        //odczyt z kombo, ustawiany po naciśnięciu przycisku zapisu do pliku
+
+        private string log = "";
+
+        private bool directoriesChecked = false;        //aktualizowana przez zdarzenie zafajkowania checkboxa w drzewie katalogów; 
+                                                        //powoduje zatrzymanie wypełniania okna listy modeli po zaznaczeniu katalogu
+                                                        //jeżeli nie nałożę tej blokady, występuje konflikt pomiędzy wątkiem wczytującym modele w celu zapisania do pliku a wątkiem wypełniającym okno modeli
+                                                        //co wywala błąd BDReadera (połączenie otwarte)
+
+        #endregion
 
 
         public MainForm(string login, string pass)
@@ -66,7 +83,8 @@ namespace ModelTransfer
             }
         }
 
-       
+
+
 
 
         #region Region - start programu, połączenie z bazą danych
@@ -92,7 +110,7 @@ namespace ModelTransfer
         #endregion
 
 
-        #region Region - zdarzenia wywołane w tej formatce przez interakcję użytkownika
+        #region Region - zdarzenia wywołane  przez interakcję użytkownika w tej formatce
 
         private void modelsListView_MouseClick(object sender, MouseEventArgs e)
         {
@@ -117,6 +135,7 @@ namespace ModelTransfer
         }
 
 
+
         private void SaveToDBButton_Click(object sender, EventArgs e)
         {
             GetDirectoryAndUserForm getDirectoryAndUser = new GetDirectoryAndUserForm(reader);
@@ -131,6 +150,7 @@ namespace ModelTransfer
         {
             if (modelsListView.CheckedItems.Count > 0 || getModelsFromDirectories)
             {
+                saveModelOption = saveModelOptionsCombo.SelectedIndex;
                 GetFileNameForm fnForm = new GetFileNameForm();
                 fnForm.GetFileNameEvent += onGetFileNameForm_ButtonClick;
                 fnForm.ShowDialog();                
@@ -147,96 +167,12 @@ namespace ModelTransfer
 
         #region Region - zdarzenia wywołane przez interakcję użytkownika w innych formatkach, mające wpływ na akcje tej formatki
 
-        //formatka GetFileNameForm
-        private void onGetFileNameForm_ButtonClick(object sender, MyEventArgs args)
-        {
-            List<Model2D> selectedModels = readSelectedModelsFromDB();
-            saveModelsToFile(selectedModels, args.fileName);
-            toolStripSaveToFileButton.Enabled = false;
-        }
-
-
-        //formatka GetDirectoryAndUserForm
-        private void onGetUserAndDirectory_ButtonClick(object sender, MyEventArgs args)
-        {
-            this.myEventArgs = args;
-            showProgressItems();          //nie można ukrywać/pokazywać elementow gdy bgw pracuje, nie zrobi wtedy nic
-
-            bgw = new BackgroundWorker();
-            bgw.DoWork += new DoWorkEventHandler(bgw_writeModelsToDB);
-            bgw.ProgressChanged += new ProgressChangedEventHandler(bgw_ProgressChanged);
-            bgw.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgw_RunWorkerCompleted);
-            bgw.WorkerReportsProgress = true;
-
-            bgw.RunWorkerAsync();
-
-        }
-
-        void bgw_writeModelsToDB(object sender, DoWorkEventArgs e)
-        {
-            readModelsFromFile();
-
-            if (modelBundle != null)
-            {
-                writeModelsToDB();
-            }
-            else
-            {
-                MyMessageBox.display("Nie można było odczytać modeli z pliku źródłowego", MessageBoxType.Error);
-            }
-
-        }
-
-
-
-
-        #region Region - obsługa paska postępu
-
-        private void hideProgressItems()
-        {
-            label1.Visible = false;
-            label2.Visible = false;
-            progressBar1.Visible = false;
-            groupBox1.Visible = false;
-        }
-
-
-        private void showProgressItems()
-        {
-            groupBox1.Visible = true;
-            label1.Visible = true;
-            label1.Text = "wczytuję pliki z dysku";
-            label2.Visible = true;
-            label2.Text = "";
-            progressBar1.Visible = true;
-        }
-
-
-
-        void bgw_ProgressChanged(object sender, ProgressChangedEventArgs e)
-        {
-            progressBar1.Value = e.ProgressPercentage;
-            groupBox1.Text = "zapisuję modele do bazy danych";
-            label1.Text = String.Format("Postęp: {0} %", e.ProgressPercentage);
-            label2.Text = String.Format("Zapisanych modeli: {0}", int.Parse(e.UserState.ToString()) + 1);
-        }
-
-
-        void bgw_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
-            hideProgressItems();
-        }
-
-
-
-        #endregion
-
-
-
 
         private void onTreeviewDirectorySelected(object sender, MyEventArgs args)
         {
-            populateModelListview(args.selectedDirectoryId);
+            if (!directoriesChecked) {
+                populateModelListview(args.selectedDirectoryId);
+            }
         }
 
 
@@ -247,21 +183,223 @@ namespace ModelTransfer
                 modelsListView.Enabled = false;
                 getModelsFromDirectories = true;
                 toolStripSaveToFileButton.Enabled = true;
+                directoriesChecked = true;
             }
             else
             {
                 modelsListView.Enabled = true;
                 getModelsFromDirectories = false;
                 toolStripSaveToFileButton.Enabled = false;
+                directoriesChecked = false;
             }
         }
-
 
 
         #endregion
 
 
+        #region Region - wątek czytania modeli z pliku i zapisywania do bazy danych
+
+        //formatka GetDirectoryAndUserForm
+        private void onGetUserAndDirectory_ButtonClick(object sender, MyEventArgs args)
+        {
+            showReadFromFileProgressItems();
+
+            computationsThread = new Thread(() => writeModelsFromFileToDB(args));
+            computationsThread.Start();
+
+        }
+
+        private void writeModelsFromFileToDB(MyEventArgs args)
+        {
+            readModelsFromFile();
+
+            if (modelBundle != null)
+            {
+                showWriteToDBProgressItems();       //delegat
+                writeModelsToDB(args);
+                hideProgressItems();            //delegat
+                refreshDirectoryTree();      //delegat          
+            }
+            else
+            {
+                MyMessageBox.display("Nie można było odczytać modeli z pliku źródłowego", MessageBoxType.Error);
+            }
+        }
+
+
+        public delegate void refreshDirectoryTreeDelegate();
+        private void refreshDirectoryTree()
+        {
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new refreshDirectoryTreeDelegate(refreshDirectoryTree));
+            }
+            else
+            {
+                directoryTreeControl1.resetThisForm();
+                directoryTreeControl1.setUpThisForm(reader);
+            }
+        }
+
+
+        #endregion
+
+
+        #region Region - wątek czytania modeli z bazy i zapisywania do pliku,
+
+        //formatka GetFileNameForm
+        private void onGetFileNameForm_ButtonClick(object sender, MyEventArgs args)
+        {
+            showReadFromDBProgressItems();
+
+            //uruchamiam wątek po wyświetleniu elementów paska postępu
+            computationsThread = new Thread(() => saveModelsFromDbToFile(args.fileName));
+            computationsThread.Start();
+        }
+
+
+        private void saveModelsFromDbToFile(string fileName)
+        {
+
+            readSelectedModelsFromDB();
+
+            showWriteToFileProgressItems();     //delegate
+
+            saveModelsToFile(fileName);
+
+            hideProgressItems();                //delegate
+            disableSaveToFileButton();          //delegate
+            MyMessageBox.display("Modele zapisane do pliku");
+        }
+
+        public delegate void disableSaveToFileButtonDelegate();
+
+        private void disableSaveToFileButton()
+        {
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new disableSaveToFileButtonDelegate(disableSaveToFileButton));
+            }
+            else
+            {
+                toolStripSaveToFileButton.Enabled = false;
+            }
+        }
+
+        #endregion
+
+
+
+        #region Region - obsługa paska postępu
+
+        //wskaźnik do funkcji sterującej paskiem postępu
+        public delegate void showProgressDelegate(int percent, int number);
+
+        //funkcja sterująca paskiem postępu
+        private void showProgress(int percent, int number)
+        {
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new showProgressDelegate(showProgress), percent, number);
+            }
+            else
+            {
+                progressBar1.Value = percent;
+                label1.Text = number.ToString();
+            }
+        }
+
+        public delegate void hideProgressItemsDelegate();
+        private void hideProgressItems()
+        {
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new hideProgressItemsDelegate(hideProgressItems));
+            }
+            else
+            {
+                label1.Visible = false;
+                label2.Visible = false;
+                progressBar1.Visible = false;
+                groupBox1.Visible = false;
+            }
+        }
+
+
+        //czytanie z bazy danych i zapisywanie do pliku
+        private void showReadFromDBProgressItems()
+        {
+            groupBox1.Visible = true;
+            groupBox1.Text = "wczytuję modele z bazy danych";
+            label1.Visible = true;
+            label1.Text = "";
+            label2.Visible = true;
+            label2.Text = "";
+            progressBar1.Visible = true;
+        }
+
+
+        public delegate void showWriteToFileProgressItemsDelegate();
+
+        private void showWriteToFileProgressItems()
+        {
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new showWriteToFileProgressItemsDelegate(showWriteToFileProgressItems));
+            }
+            else
+            {
+                groupBox1.Visible = true;
+                groupBox1.Text = "";
+                label1.Visible = true;
+                label1.Text = "zapisuję modele do pliku na dysku";
+                label2.Visible = false;
+                label2.Text = "";
+                progressBar1.Visible = false;
+            }
+        }
+
+
+        //czytanie z pliku i zapisywanie do bazy
+        private void showReadFromFileProgressItems()
+        {
+            groupBox1.Visible = true;
+            label1.Visible = true;
+            label1.Text = "wczytuję pliki z dysku";
+            label2.Visible = false;
+            label2.Text = "";
+            progressBar1.Visible = false;
+        }
+
+        public delegate void showWriteToDBProgressItemsDelegate();
+        private void showWriteToDBProgressItems()
+        {
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new showWriteToDBProgressItemsDelegate(showWriteToDBProgressItems));
+            }
+            else
+            {
+                groupBox1.Visible = true;
+                groupBox1.Text = "zapisuję modele do bazy danych";
+                label1.Visible = true;
+                label1.Text = "";
+                label2.Visible = true;
+                label2.Text = "";
+                progressBar1.Visible = true;
+            }
+        }
+
+
+        #endregion
+
+
+
+
         #region Region - czytanie modeli z bazy danych i zapisywanie do pliku
+
+
 
         private QueryData readModelsFromDB(string queryFilter = "")
         {
@@ -292,10 +430,10 @@ namespace ModelTransfer
         }
 
 
-        private List<Model2D> readSelectedModelsFromDB()
+        private void readSelectedModelsFromDB()
         {
 
-            List<Model2D> selectedModels = new List<Model2D>();
+            selectedModels = new List<Model2D>();
             string selectedModelIds = getSelectedModelIds();;
             
             string queryFilter = SqlQueries.getModelsByIdFilter.Replace("@iDs", selectedModelIds);
@@ -304,8 +442,11 @@ namespace ModelTransfer
             List<object[]> models = modelData.getQueryData();
             List<string> paramTypes = modelData.getDataTypes();
 
-            for(int i=0; i< models.Count; i++)
+            int modelsTotal = models.Count;       //do paska postępu
+
+            for (int i=0; i< models.Count; i++)
             {
+                
                 object[] model = models[i];
                 Model2D model2D = new Model2D();
 
@@ -339,8 +480,12 @@ namespace ModelTransfer
 
                 readPowierzchniaFromDB(model2D);
                 selectedModels.Add(model2D);
+
+                //do paska postępu
+                int percents = (i + 1) * 100 / modelsTotal;
+                showProgress(percents, i);
             }
-            return selectedModels;
+
         }
 
         private string getSelectedModelIds()
@@ -373,7 +518,7 @@ namespace ModelTransfer
         private void readPowierzchniaFromDB(Model2D model)
         {
             string query = "";
-            if (saveModelOptionsCombo.SelectedIndex == 0)
+            if (saveModelOption == 0)       
             {
                 query = SqlQueries.getPowierzchnieNoBlob + SqlQueries.getPowierzchnie_byIdModelFilter + model.idModel;
             }
@@ -415,7 +560,7 @@ namespace ModelTransfer
             points.pointData = reader.readFromDBToDataTable(query);
             pow.points = points;
 
-            if (saveModelOptionsCombo.SelectedIndex == 1)           //tj pełne modele, tylko wtedy wczytuję trójkąty
+            if (saveModelOption == 1)           //tj pełne modele, tylko wtedy wczytuję trójkąty
             {
                 ModelTriangles triangles = new ModelTriangles();
                 query = SqlQueries.getTriangles + pow.idPow;
@@ -435,11 +580,11 @@ namespace ModelTransfer
 
         }
 
-        private void saveModelsToFile(List<Model2D> selectedModels, string fileName)
+        private void saveModelsToFile(string fileName)
         {
-            ModelBundle modelBundle = new ModelBundle();
-            modelBundle.models = selectedModels;
-            modelBundle.checkedDirectories = directoryTreeControl1.checkedDirectories;
+            ModelBundle mb = new ModelBundle();
+            mb.models = selectedModels;
+            mb.checkedDirectories = directoryTreeControl1.checkedDirectories;
             string fileSaveDir = currentPath;
 
             if (fileName == null || fileName == "")
@@ -458,11 +603,12 @@ namespace ModelTransfer
             {
                 var bformatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
 
-                bformatter.Serialize(stream, modelBundle);
+                bformatter.Serialize(stream, mb);
             }
         }
 
         #endregion
+
 
 
         #region Region - czytanie modeli z pliku binarnego i zapisywanie do bazy danych
@@ -474,16 +620,10 @@ namespace ModelTransfer
             string filePath = currentPath;
             modelBundle = new ModelBundle();
 
-            FileInfo fileInfo; 
-            long length;
             try
             {
-            var sw = Stopwatch.StartNew();
                 if (fm.assertFileExists(filePath + @"\" + fileName))
                 {
-                    fileInfo = new FileInfo(filePath + @"\" + fileName);
-                    length = fileInfo.Length;
-                    long currentPosition = 0;
 
                     //deserialize
                     using (Stream stream = File.Open(filePath + @"\" + fileName, FileMode.Open))
@@ -492,8 +632,7 @@ namespace ModelTransfer
                         modelBundle = (ModelBundle)bformatter.Deserialize(stream);
                     }
                 }
-                sw.Stop();
-                timeLog += sw.Elapsed + "  czytanie pliku";
+
             }
             catch (ArgumentException ex)
             {
@@ -503,7 +642,7 @@ namespace ModelTransfer
 
 
 
-        private void writeModelsToDB()
+        private void writeModelsToDB(MyEventArgs args)
         {
             List<Model2D> models = modelBundle.models;
 
@@ -514,16 +653,16 @@ namespace ModelTransfer
             int maxModelIdInDB = 0;
 
             string newDirectoryId = "";
-            string newIdWlasciciel = myEventArgs.selectedUserId;
+            string newIdWlasciciel = args.selectedUserId;
 
-            bool restoreDirectoryTree = myEventArgs.restoreDirectoryTree;
+            bool restoreDirectoryTree = args.restoreDirectoryTree;
 
             string newCzyArch = "0";        //wczytywane modele nie będą archiwalne
             string newIdUzytk = "null";     //wczytywane modele nie będą oznaczone jako wczytane do pamięci
 
             if (restoreDirectoryTree && checkedDirectories.Count>0)
             {
-                writeDirectoryTreeToDB(checkedDirectories, myEventArgs.selectedDirectoryId);
+                writeDirectoryTreeToDB(checkedDirectories, args.selectedDirectoryId);
             }
 
             int modelsTotal = models.Count-1;       //do paska postępu
@@ -532,7 +671,7 @@ namespace ModelTransfer
             {
                 //do paska psotępu
                 int percents = (i * 100) / modelsTotal;
-                bgw.ReportProgress(percents, i);
+                showProgress(percents, i);
 
                 Model2D model = models[i];
 
@@ -546,7 +685,7 @@ namespace ModelTransfer
             }
             else
             {
-                newDirectoryId = myEventArgs.selectedDirectoryId;
+                newDirectoryId = args.selectedDirectoryId;
             }
 
                 string query = SqlQueries.insertModel.Replace("@nazwaModel", nazwaModel).Replace("@opisModel", opisModel).Replace("@dataModel", dataModel).Replace("@idUzytk", newIdUzytk).Replace("@czyArch", newCzyArch).Replace("@directoryId", newDirectoryId).Replace("@idWlasciciel", newIdWlasciciel);
@@ -569,8 +708,7 @@ namespace ModelTransfer
             }
 
             MyMessageBox.display("Modele wczytane");
-            directoryTreeControl1.resetThisForm();
-            directoryTreeControl1.setUpThisForm(reader);
+
         }
 
 
@@ -617,6 +755,7 @@ namespace ModelTransfer
                 writer.writeToDB(query);
             }
         }
+
 
         private int getMaxDirectoryIdFromDB()
         {
@@ -716,5 +855,6 @@ namespace ModelTransfer
         {
             this.progressBar1.Increment(1);
         }
+
     }
 }
