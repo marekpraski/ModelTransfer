@@ -54,15 +54,35 @@ namespace ModelTransfer
             treeView1.CheckBoxes = true;
         }
 
+        public void showUncheckAllCheckboxesLabel()
+        {
+            uncheckAllLabel.Visible = true;
+        }
+
         #endregion
 
 
-        #region Region - zdarzenia wywołane akcją użytkownika
+        #region Region - zdarzenia wywołane przez interakcję użytkownika z kontrolkami tej formatki
 
 
         private void TreeView1_AfterSelect(object sender, TreeViewEventArgs e)
         {
             onDirectorySelected();
+        }
+
+
+        private void uncheckAllButton_Click(object sender, EventArgs e)
+        {
+
+        }
+
+
+        private void UncheckAllLabel_Click(object sender, EventArgs e)
+        {
+            if (checkedDirectories.Count > 0)
+            {
+                uncheckAllCheckboxes();
+            }
         }
 
 
@@ -121,6 +141,25 @@ namespace ModelTransfer
                 }
             }
         }
+
+
+        private void uncheckAllCheckboxes()
+        {
+            //klonuję zbiór zaznaczonych gałęzi, bo gdy czytam z głównego zbioru, to zdarzenie odznaczania gałęzi powoduje usunięcie gałęzi z tego zbioru, czyli zmianą zawartości zbioru i to wywala błąd na pętli
+            Dictionary<string, ModelDirectory> copyOfCheckedDirs = new Dictionary<string, ModelDirectory>();
+            foreach(ModelDirectory dir in checkedDirectories.Values)
+            {
+                copyOfCheckedDirs.Add(dir.id, dir);
+            }
+
+            TreeNode[] nodes;
+            foreach(ModelDirectory dir in copyOfCheckedDirs.Values)
+            {
+                nodes = treeView1.Nodes.Find(dir.id, true);
+                nodes[0].Checked = false;                   //zawsze jest tylko jedna gałąź, id jest unikalne
+            }
+        }
+
 
         private List<string> getCheckedDirectories()
         {

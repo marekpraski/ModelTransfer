@@ -24,7 +24,7 @@ namespace ModelTransfer
             InitializeComponent();
         }
 
-        private void Button1_Click(object sender, EventArgs e)
+        private void acceptButton_Click(object sender, EventArgs e)
         {
             OnGetFileName();
             this.Close();

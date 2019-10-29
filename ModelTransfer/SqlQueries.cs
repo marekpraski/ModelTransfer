@@ -45,7 +45,9 @@ namespace ModelTransfer
         public static int getModels_idUzytkWlascicielIndex = 7;
 
 
-        public static string getMaxModelId = "select MAX(IDModel) as maxModelId from DefModel2D"; 
+        public static string getMaxModelId = "select MAX(IDModel) as maxModelId from DefModel2D";
+
+        public static string getSumTriangles = "select  sum(ileTri) as numberOfTriangles from DefPowierzchni where IDModel in(@modelIds )";
 
 
         //powierzchnie

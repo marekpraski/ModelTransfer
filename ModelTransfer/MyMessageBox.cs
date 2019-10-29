@@ -5,6 +5,7 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -49,6 +50,23 @@ namespace ModelTransfer
             mmb.ShowDialog();
             mmb.BringToFront();
             return mmb.mbResult;
+        }
+
+        public static void displayAndClose(string message, int timeInSeconds = 2)
+        {
+            MessageBoxType mbType = MessageBoxType.Information;
+            MyMessageBox mmb = new MyMessageBox(message, mbType);
+
+            System.Windows.Forms.Timer tmr = new System.Windows.Forms.Timer();
+            tmr.Tick += delegate {
+                mmb.Close();
+            };
+            tmr.Interval = (int)TimeSpan.FromSeconds(timeInSeconds).TotalMilliseconds;
+            tmr.Start();
+
+            mmb.textBox1.Text = mmb.message;
+            mmb.ShowDialog();
+            mmb.BringToFront();
         }
 
         private void setFormLayout()

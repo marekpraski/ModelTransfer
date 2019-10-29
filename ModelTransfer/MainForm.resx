@@ -135,12 +135,12 @@
   <data name="modelsFromFileButton.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAEHSURBVDhPtZI9qsJQEIWvO3i9hQuweiCibUqb17gDV+EW
-        3IUICqKV6CsFwU3YxL9oISYa8lOIjPeMuXLRxMTCgY8MM3POvZNEqAiCgHQcx/mJWtkCokqrxHxkoJ+q
-        GyhSjXThM+h5ntd1XXdlmuYlMrVQ832/nGqwPHrUnB/ob7yn+v8d5KhNp7NrGIaNtyvURjuaLGy5xplO
-        EchRQ0/O2AI7gjiDYm+TaIAeZngNhBLp5Ntr5re/lVffMchVHTORXDxuot9IDSbBBuq0d8SJAXpsYBhG
-        IpkN1EvS+apBdWihZ2cyqAwsFhU6a85ffiQMJoG+ZO/LJ5D566+cBj4rEeUAix4hxA1zGKNHqQY+PQAA
-        AABJRU5ErkJggg==
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAEISURBVDhPY4CBb9++/UfG79+/F4BKEQdAmiy6TMCYJAOQ
+        bUU2AIYJGoSsER2D5L58+bLs06dPD+/fv/8bauhTkNjXr1/NCBrw4O2X/5VHX//33/r8f8h2CAaxQWL7
+        9+//+/3792S8XvDa/Oz/tlvvgN74+P8DFIPYIDGQHFDNOwaQH0EYmwHayx/jNAAkB1ID9gYIwDQhY+mF
+        j8DYcNUToNOfgTGIDRMHqYFqZ4C7BNlFMIW4MNgAmG34MDbNIAySAxvg5OSEExNtACyQkDFNDbBc+xQk
+        944oAyzWPAVrkl/8CMzGSEgghbgwSB6In38F0iAMZGMmZUIYFK3///9nBGGwJjhgYAAAaQ2jQa44sIsA
+        AAAASUVORK5CYII=
 </value>
   </data>
   <data name="helpButton.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
@@ -156,5 +156,11 @@
   </data>
   <metadata name="timer1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>122, 17</value>
+  </metadata>
+  <metadata name="openFileDialog1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>209, 17</value>
+  </metadata>
+  <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>69</value>
   </metadata>
 </root>

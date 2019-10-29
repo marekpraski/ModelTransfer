@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
 using System.Windows.Forms;
 
 namespace ModelTransfer
@@ -30,9 +31,25 @@ namespace ModelTransfer
 
         private void button1_Click_1(object sender, EventArgs e)
         {
-            computationsThread.Abort();
+            // Create a timer and set a two second interval.
+            System.Timers.Timer aTimer = new System.Timers.Timer();
+            aTimer.Interval = 2000;
+
+            // Hook up the Elapsed event for the timer. 
+            aTimer.Elapsed += OnTimedEvent;
+
+            // Have the timer fire repeated events (true is the default)
+            aTimer.AutoReset = true;
+
+            // Start the timer
+            aTimer.Enabled = true;
         }
 
+        private void OnTimedEvent(object sender, ElapsedEventArgs e)
+        {
+            
+            //showProgress();
+        }
 
         void runLoopComputations()
         {
@@ -70,6 +87,24 @@ namespace ModelTransfer
             computationsThread.Start();
 
 
+        }
+
+        private void Button3_Click(object sender, EventArgs e)
+        {
+            openFileDialog1.InitialDirectory = @"C:\testDesktop\conf";
+            openFileDialog1.Filter = "Pliki bin (*.bin)|*.bin";
+            openFileDialog1.ShowDialog();
+        }
+
+        private void OpenFileDialog1_FileOk(object sender, CancelEventArgs e)
+        {
+            string[] fileNames = openFileDialog1.FileNames;
+            string ff = "";
+            foreach (string fn in fileNames)
+            {
+                ff += fn;
+            }
+            MyMessageBox.display(ff);
         }
     }
 }

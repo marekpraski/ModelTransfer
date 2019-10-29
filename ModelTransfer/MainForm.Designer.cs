@@ -40,14 +40,16 @@
             this.modelsFromFileButton = new System.Windows.Forms.ToolStripButton();
             this.helpButton = new System.Windows.Forms.ToolStripButton();
             this.chooseModelsLabel = new System.Windows.Forms.Label();
-            this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
-            this.label1 = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.directoryTreeControl1 = new ModelTransfer.DirectoryTreeControl();
+            this.label2 = new System.Windows.Forms.Label();
+            this.progressBar1 = new System.Windows.Forms.ProgressBar();
+            this.label1 = new System.Windows.Forms.Label();
+            this.abortButton = new System.Windows.Forms.Button();
+            this.progressAreaPanel = new System.Windows.Forms.Panel();
             this.toolStrip1.SuspendLayout();
-            this.groupBox1.SuspendLayout();
+            this.progressAreaPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // modelsListView
@@ -140,45 +142,14 @@
             this.chooseModelsLabel.TabIndex = 3;
             this.chooseModelsLabel.Text = "wybierz modele";
             // 
-            // progressBar1
-            // 
-            this.progressBar1.Location = new System.Drawing.Point(215, 16);
-            this.progressBar1.Name = "progressBar1";
-            this.progressBar1.Size = new System.Drawing.Size(228, 23);
-            this.progressBar1.TabIndex = 4;
-            // 
             // timer1
             // 
             this.timer1.Tick += new System.EventHandler(this.Timer1_Tick);
             // 
-            // label1
+            // openFileDialog1
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(6, 26);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(35, 13);
-            this.label1.TabIndex = 5;
-            this.label1.Text = "label1";
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(84, 26);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(35, 13);
-            this.label2.TabIndex = 6;
-            this.label2.Text = "label2";
-            // 
-            // groupBox1
-            // 
-            this.groupBox1.Controls.Add(this.label1);
-            this.groupBox1.Controls.Add(this.progressBar1);
-            this.groupBox1.Controls.Add(this.label2);
-            this.groupBox1.Location = new System.Drawing.Point(20, 227);
-            this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(449, 55);
-            this.groupBox1.TabIndex = 7;
-            this.groupBox1.TabStop = false;
+            this.openFileDialog1.FileName = "modele";
+            this.openFileDialog1.FileOk += new System.ComponentModel.CancelEventHandler(this.OpenFileDialog1_FileOk);
             // 
             // directoryTreeControl1
             // 
@@ -187,12 +158,59 @@
             this.directoryTreeControl1.Size = new System.Drawing.Size(213, 302);
             this.directoryTreeControl1.TabIndex = 2;
             // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.BackColor = System.Drawing.SystemColors.Control;
+            this.label2.Location = new System.Drawing.Point(118, 7);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(35, 13);
+            this.label2.TabIndex = 6;
+            this.label2.Text = "label2";
+            // 
+            // progressBar1
+            // 
+            this.progressBar1.Location = new System.Drawing.Point(69, 28);
+            this.progressBar1.Name = "progressBar1";
+            this.progressBar1.Size = new System.Drawing.Size(228, 23);
+            this.progressBar1.TabIndex = 4;
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(12, 32);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(35, 13);
+            this.label1.TabIndex = 5;
+            this.label1.Text = "label1";
+            // 
+            // abortButton
+            // 
+            this.abortButton.Location = new System.Drawing.Point(83, 57);
+            this.abortButton.Name = "abortButton";
+            this.abortButton.Size = new System.Drawing.Size(123, 23);
+            this.abortButton.TabIndex = 7;
+            this.abortButton.Text = "przerwij";
+            this.abortButton.UseVisualStyleBackColor = true;
+            this.abortButton.Click += new System.EventHandler(this.AbortButton_Click);
+            // 
+            // progressAreaPanel
+            // 
+            this.progressAreaPanel.Controls.Add(this.label2);
+            this.progressAreaPanel.Controls.Add(this.abortButton);
+            this.progressAreaPanel.Controls.Add(this.progressBar1);
+            this.progressAreaPanel.Controls.Add(this.label1);
+            this.progressAreaPanel.Location = new System.Drawing.Point(72, 216);
+            this.progressAreaPanel.Name = "progressAreaPanel";
+            this.progressAreaPanel.Size = new System.Drawing.Size(321, 86);
+            this.progressAreaPanel.TabIndex = 8;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(481, 336);
-            this.Controls.Add(this.groupBox1);
+            this.ClientSize = new System.Drawing.Size(481, 338);
+            this.Controls.Add(this.progressAreaPanel);
             this.Controls.Add(this.chooseModelsLabel);
             this.Controls.Add(this.directoryTreeControl1);
             this.Controls.Add(this.toolStrip1);
@@ -201,8 +219,8 @@
             this.Text = "Modeler2D model transfer";
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
-            this.groupBox1.ResumeLayout(false);
-            this.groupBox1.PerformLayout();
+            this.progressAreaPanel.ResumeLayout(false);
+            this.progressAreaPanel.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -221,11 +239,13 @@
         private System.Windows.Forms.Label chooseModelsLabel;
         private System.Windows.Forms.ToolStripComboBox saveModelOptionsCombo;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
-        private System.Windows.Forms.ProgressBar progressBar1;
         private System.Windows.Forms.Timer timer1;
-        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.OpenFileDialog openFileDialog1;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.ProgressBar progressBar1;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Button abortButton;
+        private System.Windows.Forms.Panel progressAreaPanel;
     }
 }
 
