@@ -102,6 +102,9 @@
     <Compile Include="QueryData.cs" />
     <Compile Include="SqlQueries.cs" />
     <Compile Include="TextManipulator.cs" />
+    <Compile Include="TextProgressBar.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <EmbeddedResource Include="DirectoryTreeControl.resx">
       <DependentUpon>DirectoryTreeControl.cs</DependentUpon>
     </EmbeddedResource>

@@ -40,7 +40,7 @@
             this.modelsFromFileButton = new System.Windows.Forms.ToolStripButton();
             this.helpButton = new System.Windows.Forms.ToolStripButton();
             this.chooseModelsLabel = new System.Windows.Forms.Label();
-            this.timer1 = new System.Windows.Forms.Timer(this.components);
+            this.timer1 = new System.Timers.Timer();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.directoryTreeControl1 = new ModelTransfer.DirectoryTreeControl();
             this.label2 = new System.Windows.Forms.Label();
@@ -144,7 +144,8 @@
             // 
             // timer1
             // 
-            this.timer1.Tick += new System.EventHandler(this.Timer1_Tick);
+            this.timer1.Interval = 1000;
+            this.timer1.Elapsed += new System.Timers.ElapsedEventHandler(this.Timer1_Tick);
             // 
             // openFileDialog1
             // 
@@ -239,7 +240,7 @@
         private System.Windows.Forms.Label chooseModelsLabel;
         private System.Windows.Forms.ToolStripComboBox saveModelOptionsCombo;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
-        private System.Windows.Forms.Timer timer1;
+        private System.Timers.Timer timer1;
         private System.Windows.Forms.OpenFileDialog openFileDialog1;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.ProgressBar progressBar1;

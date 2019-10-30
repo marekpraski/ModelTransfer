@@ -11,6 +11,7 @@ using System.Windows.Forms;
 using System.IO;
 using System.Diagnostics;
 using System.Threading;
+using System.Timers;
 
 namespace ModelTransfer
 {
@@ -55,6 +56,7 @@ namespace ModelTransfer
                                                         //co wywala błąd BDReadera (połączenie otwarte)
 
         private uint pointNumberWarningLevel = 1000000;         //sumaryczna liczba punktów dla których wyświetla się ostrzeżenie, że plik może być bardzo duży
+        private int progressBarStepValue = 1;                       //postęp paska podczas zapisywania do pliku
 
         #endregion
 
@@ -181,9 +183,8 @@ namespace ModelTransfer
         //sprawdzam sumaryczną liczbę punktów w modelach, żeby ostrzec przed możliwością dużego pliku
         private bool cancelOperation()
         {
-            string modelIds = getSelectedModelIds();
-            string query = SqlQueries.getSumTriangles.Replace("@modelIds", modelIds);
-            uint numberOfTriangles = uint.Parse(reader.readFromDB(query).getQueryData()[0][0].ToString());     //wynikiem będzie jedna pozycja, stąd [0][0]
+            
+            uint numberOfTriangles = getNumberOfTriangles();      //wynikiem będzie jedna pozycja, stąd [0][0]
             MyMessageBoxResults result = MyMessageBoxResults.Yes;
 
             switch (saveModelOption)
@@ -207,6 +208,15 @@ namespace ModelTransfer
                     break;
             }
             return false;
+        }
+
+        private uint getNumberOfTriangles()
+        {
+            string modelIds = getSelectedModelIds();
+            string query = SqlQueries.getSumTriangles.Replace("@modelIds", modelIds);
+            uint numberofTriangles = uint.Parse(reader.readFromDB(query).getQueryData()[0][0].ToString());     //wynikiem będzie jedna pozycja, stąd [0][0]
+            this.progressBarStepValue = Convert.ToInt32((100 * 200000) / numberofTriangles);                     //dobrane doświadczalnie, 200000 oznacza szybkość zapisu do pliku - 200tys pkt/sekundę
+            return numberofTriangles;
         }
 
         private MyMessageBoxResults generateWarning(uint numberOfPoints)
@@ -245,6 +255,31 @@ namespace ModelTransfer
                 label1.Text = number.ToString() + " / " + modelsTotal.ToString();
             }
         }
+
+
+        public delegate void showProgressTimerDelegate();
+
+        //funkcja sterująca paskiem postępu
+        private void showProgress()
+        {
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new showProgressTimerDelegate(showProgress));
+            }
+            else
+            {
+                if(progressBar1.Value < 90)
+                progressBar1.Value += progressBarStepValue;
+                //label1.Text = number.ToString() + " / " + modelsTotal.ToString();
+            }
+        }
+
+        //timer używam do obsługi paska postępu podczas zapisywania modeli do pliku i czytania z pliku
+        private void Timer1_Tick(object sender, ElapsedEventArgs e)
+        {
+            showProgress();
+        }
+
 
         private void AbortButton_Click(object sender, EventArgs e)
         {
@@ -296,7 +331,8 @@ namespace ModelTransfer
                 label1.Text = "";
                 label2.Visible = true;
                 label2.Text = "zapisuję modele do pliku na dysku";
-                progressBar1.Visible = false;
+                progressBar1.Visible = true;
+                progressBar1.Value = 0;
             }
         }
 
@@ -385,6 +421,8 @@ namespace ModelTransfer
             readSelectedModelsFromDB();
 
             showWriteToFileProgressItems();     //delegate
+            timer1.Enabled = true;
+            timer1.Start();
 
             saveModelsToFile(fileName);
 
@@ -613,6 +651,8 @@ namespace ModelTransfer
 
                 bformatter.Serialize(stream, mb);
             }
+            timer1.Stop();
+            timer1.Enabled = false;
         }
 
         #endregion
@@ -918,10 +958,7 @@ namespace ModelTransfer
 
         #endregion
 
-        private void Timer1_Tick(object sender, EventArgs e)
-        {
-            this.progressBar1.Increment(1);
-        }
+
 
     }
 }

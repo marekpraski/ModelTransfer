@@ -69,6 +69,8 @@ namespace ModelTransfer
 
         public void showProgress(int percent, int i)
         {
+            //TextProgressBar textProgressBar = new TextProgressBar();
+            //textProgressBar.VisualMode =  ProgressBarDisplayMode.Percentage;
             if(this.InvokeRequired)
             {
                 this.Invoke(new showProgressDelegate(showProgress), percent, i);
@@ -91,9 +93,7 @@ namespace ModelTransfer
 
         private void Button3_Click(object sender, EventArgs e)
         {
-            openFileDialog1.InitialDirectory = @"C:\testDesktop\conf";
-            openFileDialog1.Filter = "Pliki bin (*.bin)|*.bin";
-            openFileDialog1.ShowDialog();
+            progressBar1.Value = 0;
         }
 
         private void OpenFileDialog1_FileOk(object sender, CancelEventArgs e)
