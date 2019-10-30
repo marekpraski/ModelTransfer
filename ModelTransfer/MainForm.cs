@@ -76,7 +76,7 @@ namespace ModelTransfer
             {
                 hideProgressItems();
                 saveModelOptionsCombo.Items.AddRange(modelSaveOptions);
-                saveModelOptionsCombo.SelectedIndex = 0;
+                saveModelOptionsCombo.SelectedIndex = 1;                    //domyślna opcja kombo
 
                 //ustawienia eksploratora plików
                 openFileDialog1.Filter = "Pliki modeli (*.bin)|*.bin";
@@ -96,7 +96,7 @@ namespace ModelTransfer
 
 
 
-        #region Region - start programu, połączenie z bazą danych
+        #region Region - start programu, utworzenie połączenia z bazą danych, utworzenie czytnika
 
 
         private bool establishConnection()

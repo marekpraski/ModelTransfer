@@ -16,6 +16,8 @@ namespace ModelTransfer
         public static string connectionStringDelimiter = "server";
         public static string databaseNameDelimiter = "db_name";
 
+        public static int connectionTimeout = 120;      //2 minuty
+
         //ścieżka względna z której znajdowany jest plik konfiguracyjny, np @"/../Conf/". Gdy jest "" plik konfiguracyjny musi być w katalogu z którego uruchomiony jest program
         public static string configFilePath = "";
 

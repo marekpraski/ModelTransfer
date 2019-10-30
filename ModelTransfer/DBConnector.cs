@@ -50,7 +50,7 @@ namespace ModelTransfer
             //przykładowy connection string
             //Data Source=laptop08\sqlexpress;Initial Catalog=dbrezerwer_test;User ID=marek;Password=root
 
-            dbConnectionString = "Data Source=" + serverName + ";Initial Catalog=" + dbName + ";User ID=" + userName + ";Password=" + userPassword;
+            dbConnectionString = "Data Source=" + serverName + ";Initial Catalog=" + dbName + ";User ID=" + userName + ";Password=" + userPassword + ";Connection Timeout=" + ProgramSettings.connectionTimeout;
 
         }
         private bool testConnection()
