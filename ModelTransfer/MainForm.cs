@@ -12,6 +12,7 @@ using System.IO;
 using System.Diagnostics;
 using System.Threading;
 using System.Timers;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace ModelTransfer
 {
@@ -55,11 +56,15 @@ namespace ModelTransfer
                                                         //jeżeli nie nałożę tej blokady, występuje konflikt pomiędzy wątkiem wczytującym modele w celu zapisania do pliku a wątkiem wypełniającym okno modeli
                                                         //co wywala błąd BDReadera (połączenie otwarte)
 
-        private uint pointNumberWarningLevel = 1000000;         //sumaryczna liczba punktów dla których wyświetla się ostrzeżenie, że plik może być bardzo duży
-        private int progressBarStepValue = 1;                       //postęp paska podczas zapisywania do pliku
+        private int pointNumberWarningLevel = 1000;         //dzielę na 1000 po odczycie; sumaryczna liczba punktów dla których wyświetla się ostrzeżenie, że plik może być bardzo duży
+        private int numberOfTriangles = 0;                     //liczba trójkątów do zapisu z bazy danych do pliku; do sterowania paskiem postępu oraz ostrzeżeniem o dużej ilości danych do zapisu
+
+        private int fileSize = 0;                       //wielkość pliku do odczytu
+        int timerTickNumber = 0;
 
         #endregion
 
+#region Region - konstruktor, ustawienia tej formatki
 
         public MainForm(string login, string pass)
         {
@@ -97,6 +102,16 @@ namespace ModelTransfer
         }
 
 
+        private void resetParameters()
+        {
+            this.fileSize = 0;
+            this.fileNames = null;
+            this.timerTickNumber = 0;
+            this.numberOfTriangles = 0;
+        }
+
+
+        #endregion
 
 
 
@@ -123,6 +138,7 @@ namespace ModelTransfer
 #endregion
 
 
+
 #region Region - zdarzenia wywołane  przez interakcję użytkownika w tej formatce
 
         private void modelsListView_MouseClick(object sender, MouseEventArgs e)
@@ -141,32 +157,9 @@ namespace ModelTransfer
 
 
 
-        private void HelpButton_Click(object sender, EventArgs e)
-        {
-            string pomocInfo = "dir = currentPath \r\n" + "fileName = modele.bin";
-            MyMessageBox.display(pomocInfo);
-        }
-
-
-
-        private void SaveToDBButton_Click(object sender, EventArgs e)
-        {
-            openFileDialog1.ShowDialog();            
-        }
-
-
-        //zatwierdzenie wyboru plików w eksploratorze
-        private void OpenFileDialog1_FileOk(object sender, CancelEventArgs e)
-        {
-            fileNames = openFileDialog1.FileNames;
-            GetDirectoryAndUserForm getDirectoryAndUser = new GetDirectoryAndUserForm(reader);
-            getDirectoryAndUser.acceptButtonClickedEvent += onGetUserAndDirectory_ButtonClick;
-            getDirectoryAndUser.ShowDialog();
-        }
-
-
         private void SaveToFileButton_Click(object sender, EventArgs e)
         {
+            resetParameters();
 
             if (modelsListView.CheckedItems.Count > 0 || getModelsFromDirectories)
             {
@@ -184,11 +177,41 @@ namespace ModelTransfer
             }
         }
 
+
+        private void SaveToDBButton_Click(object sender, EventArgs e)
+        {
+            resetParameters();
+            openFileDialog1.ShowDialog();            
+        }
+
+
+        private void HelpButton_Click(object sender, EventArgs e)
+        {
+            string pomocInfo = "Pojedyncze modele można wybierać po zwykłym zaznaczeniu katalogu" +
+                            "\r\nPo zaznaczeniu checkboxa przy katalogu kopiowane bedą wszystkie znajdujące się w nim modele;" + 
+                            "\r\n    niemożliwe jest wtedy wybranie tylko pojedynczych modeli";
+            MyMessageBox.display(pomocInfo);
+        }
+
+
+        //zatwierdzenie wyboru plików w eksploratorze
+        private void OpenFileDialog1_FileOk(object sender, CancelEventArgs e)
+        {
+            fileNames = openFileDialog1.FileNames;
+            GetDirectoryAndUserForm getDirectoryAndUser = new GetDirectoryAndUserForm(reader);
+            getDirectoryAndUser.acceptButtonClickedEvent += onGetUserAndDirectory_ButtonClick;
+            getDirectoryAndUser.ShowDialog();
+        }
+
+        //
+        //metody wspomagające powyższe zdarzenia
+        //
+
         //sprawdzam sumaryczną liczbę punktów w modelach, żeby ostrzec przed możliwością dużego pliku
         private bool cancelOperation()
         {
             
-            uint numberOfTriangles = getNumberOfTriangles();      //wynikiem będzie jedna pozycja, stąd [0][0]
+            getNumberOfTriangles();
             MyMessageBoxResults result = MyMessageBoxResults.Yes;
 
             switch (saveModelOption)
@@ -212,16 +235,14 @@ namespace ModelTransfer
             return false;
         }
 
-        private uint getNumberOfTriangles()
+        private void getNumberOfTriangles()
         {
             string modelIds = getSelectedModelIds();
             string query = SqlQueries.getSumTriangles.Replace("@modelIds", modelIds);
-            uint numberofTriangles = uint.Parse(reader.readFromDB(query).getQueryData()[0][0].ToString());     //wynikiem będzie jedna pozycja, stąd [0][0]
-            this.progressBarStepValue = Convert.ToInt32((100 * 200000) / numberofTriangles);                     //dobrane doświadczalnie, 200000 oznacza szybkość zapisu do pliku - 200tys pkt/sekundę
-            return numberofTriangles;
+            this.numberOfTriangles = int.Parse(reader.readFromDB(query).getQueryData()[0][0].ToString())/1000;     //wynikiem będzie jedna pozycja, stąd [0][0]
         }
 
-        private MyMessageBoxResults generateWarning(uint numberOfPoints)
+        private MyMessageBoxResults generateWarning(int numberOfPoints)
         {
 
             if (numberOfPoints > pointNumberWarningLevel)
@@ -233,7 +254,7 @@ namespace ModelTransfer
         }
 
 
-#endregion
+    #endregion
 
 
 
@@ -259,29 +280,43 @@ namespace ModelTransfer
         }
 
 
-        public delegate void showProgressTimerDelegate();
+        public delegate void showProgressByStepDelegate(int progressBarValue);
 
         //funkcja sterująca paskiem postępu
-        private void showProgress()
+        private void showProgress(int progressBarValue)
         {
             if (this.InvokeRequired)
             {
-                this.Invoke(new showProgressTimerDelegate(showProgress));
+                this.Invoke(new showProgressByStepDelegate(showProgress));
             }
             else
             {
-                if(progressBar1.Value < 90)
-                progressBar1.Value += progressBarStepValue;
-                //label1.Text = number.ToString() + " / " + modelsTotal.ToString();
+                if (progressBar1.Value < 90)    //postęp dobrany jest doświadczalnie, więc gdy transfer okaże się mniejszy niż zakladany i pasek za szybko dojdzie do końca to niech czeka na 90%
+                {
+                    progressBar1.Value = progressBarValue;
+                }
             }
         }
 
-        //timer używam do obsługi paska postępu podczas zapisywania modeli do pliku i czytania z pliku
-        private void Timer1_Tick(object sender, ElapsedEventArgs e)
+        //timer używam do obsługi paska postępu podczas zapisywania modeli do pliku
+        private void saveToFileTimer_Tick(object sender, ElapsedEventArgs e)
         {
-            //int[] data = getProgressBarData();
+            timerTickNumber++;
+            decimal progressStep = 100*200 / (decimal)numberOfTriangles;                     //dobrane doświadczalnie, 200 oznacza szybkość zapisu do pliku - 200tys pkt/sekundę; 100 bo przeliczam na %
+            int progressBarValue = Convert.ToInt32(Math.Round((timerTickNumber * progressStep),0));
 
-            showProgress();
+            showProgress(progressBarValue);
+        }
+
+
+        //timer używam do obsługi paska postępu podczas czytania modeli z pliku
+        private void ReadFromFileTimer_Tick(object sender, ElapsedEventArgs e)
+        {
+            timerTickNumber++;
+            decimal progressStep = 100 * 10000 / (decimal)fileSize;                     //dobrane doświadczalnie, 10000 oznacza szybkość odczytu z pliku - 10 MB/sekundę; 100 bo przeliczam na %
+            int progressBarValue = Convert.ToInt32(Math.Round((timerTickNumber * progressStep), 0));
+
+            showProgress(progressBarValue);
         }
 
 
@@ -347,10 +382,11 @@ namespace ModelTransfer
         {
             progressAreaPanel.Visible = true;
             label1.Visible = true;
-            label1.Text = "wczytuję pliki z dysku";
-            label2.Visible = false;
-            label2.Text = "";
-            progressBar1.Visible = false;
+            label1.Text = "";
+            label2.Visible = true;
+            label2.Text = "wczytuję plik z dysku";
+            progressBar1.Visible = true;
+            progressBar1.Value = 0;
         }
 
         public delegate void showWriteToDBProgressItemsDelegate();
@@ -428,14 +464,14 @@ namespace ModelTransfer
             showWriteToFileProgressItems();     //delegate
 
             // 
-            // uruchamiam timer1
+            // uruchamiam timer1 potrzebny do paska postępu; pasek popychany zdarzeniem Timer1_Tick
             // 
-            this.timer1.Elapsed += Timer1_Tick;
-            this.timer1.Interval = 1000;
-            timer1.Enabled = true;
-            timer1.Start();
+            this.saveToFileTimer.Elapsed += saveToFileTimer_Tick;
+            this.saveToFileTimer.Interval = 1000;
+            saveToFileTimer.Enabled = true;
+            saveToFileTimer.Start();
 
-            saveModelsToFile(fileName);
+            writeModelsToFile(fileName);
 
             hideProgressItems();                //delegate
             disableSaveToFileButton();          //delegate
@@ -636,7 +672,7 @@ namespace ModelTransfer
 
         }
 
-        private void saveModelsToFile(string fileName)
+        private void writeModelsToFile(string fileName)
         {
             ModelBundle mb = new ModelBundle();
             mb.models = selectedModels;
@@ -657,12 +693,13 @@ namespace ModelTransfer
             //serialize
             using (Stream stream = File.Open(serializationFile, FileMode.Create))
             {
-                var bformatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+                var bformatter = new BinaryFormatter();
 
                 bformatter.Serialize(stream, mb);
             }
-            timer1.Stop();
-            timer1.Enabled = false;
+            //timer jest potrzebny do paska postępu, uruchomiony został w metodzie "saveModelsFromDbToFile", teraz po zapisaniu pliku zamykam go
+            saveToFileTimer.Stop();
+            saveToFileTimer.Enabled = false;
         }
 
 #endregion
@@ -686,6 +723,13 @@ namespace ModelTransfer
         //metoda uruchamiana w osobnym wątku
         private void writeModelsFromFileToDB(MyEventArgs args)
         {
+            // 
+            // readFromFileTimer
+            // 
+            readFromFileTimer.Elapsed += ReadFromFileTimer_Tick;
+            readFromFileTimer.Interval = 1000;
+            readFromFileTimer.Enabled = true;
+            readFromFileTimer.Start();
             readModelsFromFile();
 
             if (modelBundle != null)
@@ -721,10 +765,12 @@ namespace ModelTransfer
 
         private void readModelsFromFile()
         {
+
             FileManipulator fm = new FileManipulator();
             if (this.fileNames.Length > 0)
             {
-                foreach (string fileName in this.fileNames)
+                foreach (string fileName in this.fileNames)         //teroretycznie przygotowane do czytania z wielu plików, ale zapisywanie tego później do bazy może być problematyczne
+                                                                    //bez każdorazowego wskazania, gdzie katalogi mają być zakotwiczone
                 {
 
                     modelBundle = new ModelBundle();
@@ -733,15 +779,15 @@ namespace ModelTransfer
                     {
                         if (fm.assertFileExists(fileName))
                         {
-
+                            FileInfo info = new FileInfo(fileName);
+                            this.fileSize = Convert.ToInt32(info.Length/1000);
                             //deserialize
                             using (Stream stream = File.Open(fileName, FileMode.Open))
                             {
-                                var bformatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+                                BinaryFormatter bformatter = new BinaryFormatter();
                                 modelBundle = (ModelBundle)bformatter.Deserialize(stream);
                             }
                         }
-
                     }
                     catch (ArgumentException ex)
                     {
@@ -749,6 +795,8 @@ namespace ModelTransfer
                     }
                 }
             }
+            readFromFileTimer.Stop();
+            readFromFileTimer.Enabled = false;
         }
 
 
@@ -965,9 +1013,9 @@ namespace ModelTransfer
             return uint.Parse(res.getQueryData()[0][0].ToString());
         }
 
-#endregion
 
 
+        #endregion
 
     }
 }

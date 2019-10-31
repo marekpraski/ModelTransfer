@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.modelsListView = new System.Windows.Forms.ListView();
             this.modelIdColHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -39,7 +40,7 @@
             this.modelsFromFileButton = new System.Windows.Forms.ToolStripButton();
             this.helpButton = new System.Windows.Forms.ToolStripButton();
             this.chooseModelsLabel = new System.Windows.Forms.Label();
-            this.timer1 = new System.Timers.Timer();
+            this.saveToFileTimer = new System.Timers.Timer();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.label2 = new System.Windows.Forms.Label();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
@@ -47,8 +48,10 @@
             this.abortButton = new System.Windows.Forms.Button();
             this.progressAreaPanel = new System.Windows.Forms.Panel();
             this.directoryTreeControl1 = new ModelTransfer.DirectoryTreeControl();
+            this.readFromFileTimer = new System.Timers.Timer();
             this.toolStrip1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.timer1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.saveToFileTimer)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.readFromFileTimer)).BeginInit();
             this.progressAreaPanel.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -144,10 +147,15 @@
             this.chooseModelsLabel.TabIndex = 3;
             this.chooseModelsLabel.Text = "wybierz modele";
             // 
-            // timer1
+            // saveToFileTimer
             // 
-            this.timer1.Enabled = true;
-            this.timer1.SynchronizingObject = this;
+            this.saveToFileTimer.Enabled = true;
+            this.saveToFileTimer.SynchronizingObject = this;
+            // 
+            // readFromFileTimer
+            // 
+            this.readFromFileTimer.Enabled = true;
+            this.readFromFileTimer.SynchronizingObject = this;
             // 
             // openFileDialog1
             // 
@@ -225,7 +233,8 @@
             this.Text = "Modeler2D model transfer";
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.timer1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.saveToFileTimer)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.readFromFileTimer)).EndInit();
             this.progressAreaPanel.ResumeLayout(false);
             this.progressAreaPanel.PerformLayout();
             this.ResumeLayout(false);
@@ -246,13 +255,14 @@
         private System.Windows.Forms.Label chooseModelsLabel;
         private System.Windows.Forms.ToolStripComboBox saveModelOptionsCombo;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
-        private System.Timers.Timer timer1;
+        private System.Timers.Timer saveToFileTimer;
         private System.Windows.Forms.OpenFileDialog openFileDialog1;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.ProgressBar progressBar1;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button abortButton;
         private System.Windows.Forms.Panel progressAreaPanel;
+        private System.Timers.Timer readFromFileTimer;
     }
 }
 

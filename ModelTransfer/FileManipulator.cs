@@ -73,7 +73,7 @@ namespace ModelTransfer
         }
 
         
-        public string readFile(string file)
+        public string readTextFile(string file)
         {
             string fileText = "";
             try

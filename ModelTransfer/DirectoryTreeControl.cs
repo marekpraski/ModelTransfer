@@ -93,8 +93,11 @@ namespace ModelTransfer
 
             if (e.Node.Checked == true)
             {
-                checkedDirectories.Add(dir.id, dir);
-                checkChildren(dir);
+                if (!checkedDirectories.ContainsKey(dir.id))
+                {
+                    checkedDirectories.Add(dir.id, dir);
+                    checkChildren(dir);
+                }
             }
             else
             {

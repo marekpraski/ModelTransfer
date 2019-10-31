@@ -153,7 +153,7 @@ namespace ModelTransfer
             FileManipulator fm = new FileManipulator();
             configFilePath = currentPath + ProgramSettings.configFilePath;
             string configFile = configFilePath + @"\" + ProgramSettings.configFileName;
-            configFileText = fm.readFile(configFile);
+            configFileText = fm.readTextFile(configFile);
             if (!configFileText.Equals(""))                     //plik konfiguracyjny istnieje i nie jest pusty 
             {
                 TextManipulator tm = new TextManipulator();
