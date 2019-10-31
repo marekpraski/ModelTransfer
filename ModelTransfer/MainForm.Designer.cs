@@ -28,7 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.modelsListView = new System.Windows.Forms.ListView();
             this.modelIdColHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -42,26 +41,29 @@
             this.chooseModelsLabel = new System.Windows.Forms.Label();
             this.timer1 = new System.Timers.Timer();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
-            this.directoryTreeControl1 = new ModelTransfer.DirectoryTreeControl();
             this.label2 = new System.Windows.Forms.Label();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.label1 = new System.Windows.Forms.Label();
             this.abortButton = new System.Windows.Forms.Button();
             this.progressAreaPanel = new System.Windows.Forms.Panel();
+            this.directoryTreeControl1 = new ModelTransfer.DirectoryTreeControl();
             this.toolStrip1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.timer1)).BeginInit();
             this.progressAreaPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // modelsListView
             // 
+            this.modelsListView.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
             this.modelsListView.CheckBoxes = true;
             this.modelsListView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.modelIdColHeader,
             this.modelNameColHeader});
             this.modelsListView.HideSelection = false;
-            this.modelsListView.Location = new System.Drawing.Point(232, 49);
+            this.modelsListView.Location = new System.Drawing.Point(327, 51);
             this.modelsListView.Name = "modelsListView";
-            this.modelsListView.Size = new System.Drawing.Size(241, 281);
+            this.modelsListView.Size = new System.Drawing.Size(241, 395);
             this.modelsListView.TabIndex = 0;
             this.modelsListView.UseCompatibleStateImageBehavior = false;
             this.modelsListView.View = System.Windows.Forms.View.Details;
@@ -88,7 +90,7 @@
             this.helpButton});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(481, 25);
+            this.toolStrip1.Size = new System.Drawing.Size(578, 25);
             this.toolStrip1.TabIndex = 1;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -136,7 +138,7 @@
             // chooseModelsLabel
             // 
             this.chooseModelsLabel.AutoSize = true;
-            this.chooseModelsLabel.Location = new System.Drawing.Point(232, 29);
+            this.chooseModelsLabel.Location = new System.Drawing.Point(327, 35);
             this.chooseModelsLabel.Name = "chooseModelsLabel";
             this.chooseModelsLabel.Size = new System.Drawing.Size(79, 13);
             this.chooseModelsLabel.TabIndex = 3;
@@ -144,26 +146,18 @@
             // 
             // timer1
             // 
-            this.timer1.Interval = 1000;
-            this.timer1.Elapsed += new System.Timers.ElapsedEventHandler(this.Timer1_Tick);
+            this.timer1.Enabled = true;
+            this.timer1.SynchronizingObject = this;
             // 
             // openFileDialog1
             // 
             this.openFileDialog1.FileName = "modele";
             this.openFileDialog1.FileOk += new System.ComponentModel.CancelEventHandler(this.OpenFileDialog1_FileOk);
             // 
-            // directoryTreeControl1
-            // 
-            this.directoryTreeControl1.Location = new System.Drawing.Point(12, 28);
-            this.directoryTreeControl1.Name = "directoryTreeControl1";
-            this.directoryTreeControl1.Size = new System.Drawing.Size(213, 302);
-            this.directoryTreeControl1.TabIndex = 2;
-            // 
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.BackColor = System.Drawing.SystemColors.Control;
-            this.label2.Location = new System.Drawing.Point(118, 7);
+            this.label2.Location = new System.Drawing.Point(115, 12);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(35, 13);
             this.label2.TabIndex = 6;
@@ -187,7 +181,7 @@
             // 
             // abortButton
             // 
-            this.abortButton.Location = new System.Drawing.Point(83, 57);
+            this.abortButton.Location = new System.Drawing.Point(118, 57);
             this.abortButton.Name = "abortButton";
             this.abortButton.Size = new System.Drawing.Size(123, 23);
             this.abortButton.TabIndex = 7;
@@ -197,20 +191,31 @@
             // 
             // progressAreaPanel
             // 
+            this.progressAreaPanel.BackColor = System.Drawing.SystemColors.Control;
+            this.progressAreaPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.progressAreaPanel.Controls.Add(this.label2);
             this.progressAreaPanel.Controls.Add(this.abortButton);
             this.progressAreaPanel.Controls.Add(this.progressBar1);
             this.progressAreaPanel.Controls.Add(this.label1);
-            this.progressAreaPanel.Location = new System.Drawing.Point(72, 216);
+            this.progressAreaPanel.Location = new System.Drawing.Point(117, 310);
             this.progressAreaPanel.Name = "progressAreaPanel";
             this.progressAreaPanel.Size = new System.Drawing.Size(321, 86);
             this.progressAreaPanel.TabIndex = 8;
+            // 
+            // directoryTreeControl1
+            // 
+            this.directoryTreeControl1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
+            this.directoryTreeControl1.Location = new System.Drawing.Point(12, 28);
+            this.directoryTreeControl1.Name = "directoryTreeControl1";
+            this.directoryTreeControl1.Size = new System.Drawing.Size(309, 422);
+            this.directoryTreeControl1.TabIndex = 2;
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(481, 338);
+            this.ClientSize = new System.Drawing.Size(578, 450);
             this.Controls.Add(this.progressAreaPanel);
             this.Controls.Add(this.chooseModelsLabel);
             this.Controls.Add(this.directoryTreeControl1);
@@ -220,6 +225,7 @@
             this.Text = "Modeler2D model transfer";
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.timer1)).EndInit();
             this.progressAreaPanel.ResumeLayout(false);
             this.progressAreaPanel.PerformLayout();
             this.ResumeLayout(false);

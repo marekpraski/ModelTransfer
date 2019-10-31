@@ -40,7 +40,7 @@
             this.treeView1.HideSelection = false;
             this.treeView1.Location = new System.Drawing.Point(4, 22);
             this.treeView1.Name = "treeView1";
-            this.treeView1.Size = new System.Drawing.Size(206, 276);
+            this.treeView1.Size = new System.Drawing.Size(298, 397);
             this.treeView1.TabIndex = 0;
             this.treeView1.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.TreeView1_AfterCheck);
             this.treeView1.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.TreeView1_AfterSelect);
@@ -60,7 +60,7 @@
             this.uncheckAllLabel.Cursor = System.Windows.Forms.Cursors.Hand;
             this.uncheckAllLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Underline, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
             this.uncheckAllLabel.ForeColor = System.Drawing.Color.SteelBlue;
-            this.uncheckAllLabel.Location = new System.Drawing.Point(100, 4);
+            this.uncheckAllLabel.Location = new System.Drawing.Point(200, 4);
             this.uncheckAllLabel.Name = "uncheckAllLabel";
             this.uncheckAllLabel.Size = new System.Drawing.Size(95, 13);
             this.uncheckAllLabel.TabIndex = 4;
@@ -76,7 +76,7 @@
             this.Controls.Add(this.label1);
             this.Controls.Add(this.treeView1);
             this.Name = "DirectoryTreeControl";
-            this.Size = new System.Drawing.Size(213, 302);
+            this.Size = new System.Drawing.Size(305, 423);
             this.ResumeLayout(false);
             this.PerformLayout();
 

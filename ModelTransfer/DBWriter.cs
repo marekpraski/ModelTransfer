@@ -28,7 +28,6 @@ namespace ModelTransfer
         public void writeToDB(List<string> queries)
         {
             SqlDataAdapter adapter = new SqlDataAdapter();
-            dbConnection.Open();
             foreach (string query in queries)
             {
                 if (query != null)
@@ -36,8 +35,13 @@ namespace ModelTransfer
                     try
                     {
                         SqlCommand command = new SqlCommand(query, dbConnection);
+                        command.CommandTimeout = ProgramSettings.commandTimeout;
                         adapter.InsertCommand = command;
+
+                        dbConnection.Open();
                         adapter.InsertCommand.ExecuteNonQuery();
+                        dbConnection.Close();
+
                         command.Dispose();
                     }
                     catch (System.Data.SqlClient.SqlException e)
@@ -50,7 +54,7 @@ namespace ModelTransfer
                     }
                 }
             }
-            dbConnection.Close();
+            
         }
 
 
@@ -62,6 +66,7 @@ namespace ModelTransfer
             SqlBulkCopy bulkCopy = new SqlBulkCopy(dbConnection, SqlBulkCopyOptions.TableLock | SqlBulkCopyOptions.FireTriggers | SqlBulkCopyOptions.UseInternalTransaction, null);
 
             bulkCopy.DestinationTableName = tableName;
+            bulkCopy.BulkCopyTimeout = ProgramSettings.bulkCopyTimeout;
 
             dbConnection.Open();
 

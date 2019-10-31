@@ -22,11 +22,20 @@ namespace ModelTransfer
 
         ModelBundle modelBundle;
         private string currentPath = "";
+
+        System.Timers.Timer timer1;
         public Form1()
         {
             InitializeComponent();
 
+        }
 
+        private void startTimer()
+        {
+            timer1 = new System.Timers.Timer();
+            timer1.Enabled = true;
+            timer1.Interval = 2000;
+            timer1.Start();
         }
 
         private void button1_Click_1(object sender, EventArgs e)
@@ -90,11 +99,27 @@ namespace ModelTransfer
 
 
         }
+        private delegate void showMsgDel(object sender2, ElapsedEventArgs e2, string msg);
 
+        showMsgDel msd;
         private void Button3_Click(object sender, EventArgs e)
         {
-            progressBar1.Value = 0;
+            startTimer();
+            timer1.Elapsed += timer_Tic;
+            msd = new showMsgDel(show_msg);
         }
+
+        private void timer_Tic(object s2, ElapsedEventArgs e2)
+        {
+            string msg = "jajajaj";
+            msd(s2, e2, msg);
+        }
+
+        private void show_msg(object sender, ElapsedEventArgs e, string s)
+        {
+            MyMessageBox.displayAndClose(s, 1)
+;        }
+        
 
         private void OpenFileDialog1_FileOk(object sender, CancelEventArgs e)
         {

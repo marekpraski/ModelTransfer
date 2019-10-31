@@ -22,17 +22,18 @@ namespace ModelTransfer
 
         public QueryData readFromDB(string sqlQuery)
         {
-            log += "\r\n1  " +sqlQuery;
+            log += "\r\n1  " +sqlQuery;         //dodałem zapisywanie loga dla celów debugowania
             queryData = new QueryData();
 
             try
             {
                 log += "\r\n2";
-                SqlCommand sqlCommand = new SqlCommand(sqlQuery, dbConnection);
+                SqlCommand command = new SqlCommand(sqlQuery, dbConnection);
+                command.CommandTimeout = ProgramSettings.commandTimeout;
                 dbConnection.Open();
 
                 log += "\r\n3";
-                SqlDataReader sqlReader = sqlCommand.ExecuteReader();
+                SqlDataReader sqlReader = command.ExecuteReader();
 
                 int numberOfColumns = sqlReader.FieldCount;
 
@@ -57,7 +58,7 @@ namespace ModelTransfer
 
                 sqlReader.Close();
                 log += "\r\n6";
-                sqlCommand.Dispose();
+                command.Dispose();
                 log += "\r\n7";
                 dbConnection.Close();
                 log += "\r\n8";

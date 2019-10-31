@@ -76,7 +76,11 @@ namespace ModelTransfer
             {
                 hideProgressItems();
                 saveModelOptionsCombo.Items.AddRange(modelSaveOptions);
-                saveModelOptionsCombo.SelectedIndex = 1;                    //domyślna opcja kombo
+#if DEBUG
+                saveModelOptionsCombo.SelectedIndex = 0;                    //domyślna opcja kombo
+#else
+                saveModelOptionsCombo.SelectedIndex = 1;
+#endif
 
                 //ustawienia eksploratora plików
                 openFileDialog1.Filter = "Pliki modeli (*.bin)|*.bin";
@@ -96,7 +100,7 @@ namespace ModelTransfer
 
 
 
-        #region Region - start programu, utworzenie połączenia z bazą danych, utworzenie czytnika
+#region Region - start programu, utworzenie połączenia z bazą danych, utworzenie czytnika
 
 
         private bool establishConnection()
@@ -116,10 +120,10 @@ namespace ModelTransfer
             return false;
         }
 
-        #endregion
+#endregion
 
 
-        #region Region - zdarzenia wywołane  przez interakcję użytkownika w tej formatce
+#region Region - zdarzenia wywołane  przez interakcję użytkownika w tej formatce
 
         private void modelsListView_MouseClick(object sender, MouseEventArgs e)
         {
@@ -202,10 +206,8 @@ namespace ModelTransfer
             {
                 case MyMessageBoxResults.Yes:
                     return false;
-                    break;
                 case MyMessageBoxResults.No:
                     return true;
-                    break;
             }
             return false;
         }
@@ -221,7 +223,6 @@ namespace ModelTransfer
 
         private MyMessageBoxResults generateWarning(uint numberOfPoints)
         {
-            MyMessageBoxResults result; 
 
             if (numberOfPoints > pointNumberWarningLevel)
             {
@@ -232,25 +233,26 @@ namespace ModelTransfer
         }
 
 
-        #endregion
+#endregion
 
 
 
 
-        #region Region - obsługa paska postępu
+#region Region - obsługa paska postępu
 
         //wskaźnik do funkcji sterującej paskiem postępu
-        public delegate void showProgressDelegate(int percent, int number, int modelsTotal);
+        public delegate void showProgressDelegate(int number, int modelsTotal);
 
         //funkcja sterująca paskiem postępu
-        private void showProgress(int percent, int number, int modelsTotal)
+        private void showProgress(int number, int modelsTotal)
         {
             if (this.InvokeRequired)
             {
-                this.Invoke(new showProgressDelegate(showProgress), percent, number, modelsTotal);
+                this.Invoke(new showProgressDelegate(showProgress), number, modelsTotal);
             }
             else
             {
+                int percent = number * 100 / modelsTotal;
                 progressBar1.Value = percent;
                 label1.Text = number.ToString() + " / " + modelsTotal.ToString();
             }
@@ -277,6 +279,8 @@ namespace ModelTransfer
         //timer używam do obsługi paska postępu podczas zapisywania modeli do pliku i czytania z pliku
         private void Timer1_Tick(object sender, ElapsedEventArgs e)
         {
+            //int[] data = getProgressBarData();
+
             showProgress();
         }
 
@@ -313,6 +317,7 @@ namespace ModelTransfer
             label2.Visible = true;
             label2.Text = "wczytuję modele z bazy danych";
             progressBar1.Visible = true;
+            progressBar1.Value = 0;
         }
 
 
@@ -367,12 +372,12 @@ namespace ModelTransfer
         }
 
 
-        #endregion
+#endregion
 
 
 
 
-        #region Region - czytanie modeli z bazy danych i zapisywanie do pliku
+#region Region - czytanie modeli z bazy danych i zapisywanie do pliku
 
         private void onTreeviewDirectorySelected(object sender, MyEventArgs args)
         {
@@ -421,6 +426,12 @@ namespace ModelTransfer
             readSelectedModelsFromDB();
 
             showWriteToFileProgressItems();     //delegate
+
+            // 
+            // uruchamiam timer1
+            // 
+            this.timer1.Elapsed += Timer1_Tick;
+            this.timer1.Interval = 1000;
             timer1.Enabled = true;
             timer1.Start();
 
@@ -528,8 +539,7 @@ namespace ModelTransfer
                 selectedModels.Add(model2D);
 
                 //do paska postępu
-                int percents = i * 100 / (modelsTotal-1);           //-1 bo inaczej pasek nie dochodzi do 100%
-                showProgress(percents, i+1, modelsTotal);
+                showProgress(i+1, modelsTotal);
             }
 
         }
@@ -655,11 +665,11 @@ namespace ModelTransfer
             timer1.Enabled = false;
         }
 
-        #endregion
+#endregion
 
 
 
-        #region Region - czytanie modeli z pliku binarnego i zapisywanie do bazy danych
+#region Region - czytanie modeli z pliku binarnego i zapisywanie do bazy danych
 
 
         //zdarzenie wywołane w formatce GetDirectoryAndUserForm
@@ -777,8 +787,7 @@ namespace ModelTransfer
                 string dataModel = converter.getConvertedValue(model.dataModel, model.dataModel_dataType);
 
                 //do paska postępu
-                int percents = (i * 100) / (modelsTotal-1);     //-1 bo inaczej pasek nie dochodzi do 100%
-                showProgress(percents, i+1, modelsTotal);
+                showProgress(i+1, modelsTotal);
 
             if(restoreDirectoryTree && checkedDirectories.Count > 0)
             {
@@ -956,7 +965,7 @@ namespace ModelTransfer
             return uint.Parse(res.getQueryData()[0][0].ToString());
         }
 
-        #endregion
+#endregion
 
 
 
