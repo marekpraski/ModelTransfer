@@ -13,6 +13,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.Timers;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.IO.Compression;
 
 namespace ModelTransfer
 {
@@ -56,13 +57,15 @@ namespace ModelTransfer
                                                         //jeżeli nie nałożę tej blokady, występuje konflikt pomiędzy wątkiem wczytującym modele w celu zapisania do pliku a wątkiem wypełniającym okno modeli
                                                         //co wywala błąd BDReadera (połączenie otwarte)
 
-        private int pointNumberWarningLevel = 1000;         //dzielę na 1000 po odczycie; sumaryczna liczba punktów dla których wyświetla się ostrzeżenie, że plik może być bardzo duży
+        private int pointNumberWarningLevel = 10000;         //wpisana tu liczba jest w tysiącach, bo rzeczywistą warstość dzielę na 1000 po odczycie; sumaryczna liczba punktów dla których wyświetla się ostrzeżenie, że plik może być bardzo duży
         private int numberOfTriangles = 0;                     //liczba trójkątów do zapisu z bazy danych do pliku; do sterowania paskiem postępu oraz ostrzeżeniem o dużej ilości danych do zapisu
 
         private int fileSize = 0;                       //wielkość pliku do odczytu
         int timerTickNumber = 0;
 
         #endregion
+
+
 
 #region Region - konstruktor, ustawienia tej formatki
 
@@ -247,7 +250,7 @@ namespace ModelTransfer
 
             if (numberOfPoints > pointNumberWarningLevel)
             {
-               return MyMessageBox.display("Wielkość pliku może przekroczyć 1GB, czy kontynuować?", MessageBoxType.YesNo);
+               return MyMessageBox.display("Modele do zapisania zawierają łącznie " + numberOfPoints +" punktów.\r\nTworzenie pliku może potrwać kilka minut. Czy kontynuować?", MessageBoxType.YesNo);
             }
             return MyMessageBoxResults.Yes;
             
@@ -291,7 +294,8 @@ namespace ModelTransfer
             }
             else
             {
-                if (progressBar1.Value < 90)    //postęp dobrany jest doświadczalnie, więc gdy transfer okaże się mniejszy niż zakladany i pasek za szybko dojdzie do końca to niech czeka na 90%
+                if (progressBar1.Value < 90 && progressBarValue<=100)    //postęp dobrany jest doświadczalnie, więc gdy transfer okaże się mniejszy niż zakladany i pasek za szybko dojdzie do końca to niech czeka na 90%
+                                                                        //gdy powyżej 100 to wywala się
                 {
                     progressBar1.Value = progressBarValue;
                 }
@@ -302,7 +306,7 @@ namespace ModelTransfer
         private void saveToFileTimer_Tick(object sender, ElapsedEventArgs e)
         {
             timerTickNumber++;
-            decimal progressStep = 100*200 / (decimal)numberOfTriangles;                     //dobrane doświadczalnie, 200 oznacza szybkość zapisu do pliku - 200tys pkt/sekundę; 100 bo przeliczam na %
+            decimal progressStep = 100*180 / (decimal)numberOfTriangles;                     //dobrane doświadczalnie, 200 oznacza szybkość zapisu do pliku - 200tys pkt/sekundę; 100 bo przeliczam na %
             int progressBarValue = Convert.ToInt32(Math.Round((timerTickNumber * progressStep),0));
 
             showProgress(progressBarValue);
@@ -313,7 +317,7 @@ namespace ModelTransfer
         private void ReadFromFileTimer_Tick(object sender, ElapsedEventArgs e)
         {
             timerTickNumber++;
-            decimal progressStep = 100 * 10000 / (decimal)fileSize;                     //dobrane doświadczalnie, 10000 oznacza szybkość odczytu z pliku - 10 MB/sekundę; 100 bo przeliczam na %
+            decimal progressStep = 100 * 5000 / (decimal)fileSize;                     //dobrane doświadczalnie, 10000 oznacza szybkość odczytu z pliku - 10 MB/sekundę; 100 bo przeliczam na %
             int progressBarValue = Convert.ToInt32(Math.Round((timerTickNumber * progressStep), 0));
 
             showProgress(progressBarValue);
@@ -477,6 +481,7 @@ namespace ModelTransfer
             disableSaveToFileButton();          //delegate
             MyMessageBox.displayAndClose("Modele zapisane do pliku",1);
         }
+
 
         public delegate void disableSaveToFileButtonDelegate();
 
@@ -693,9 +698,11 @@ namespace ModelTransfer
             //serialize
             using (Stream stream = File.Open(serializationFile, FileMode.Create))
             {
-                var bformatter = new BinaryFormatter();
-
-                bformatter.Serialize(stream, mb);
+                using (var compressionStream = new GZipStream(stream, CompressionMode.Compress))
+                {
+                    BinaryFormatter bformatter = new BinaryFormatter();
+                    bformatter.Serialize(compressionStream, mb);
+                }
             }
             //timer jest potrzebny do paska postępu, uruchomiony został w metodzie "saveModelsFromDbToFile", teraz po zapisaniu pliku zamykam go
             saveToFileTimer.Stop();
@@ -730,6 +737,7 @@ namespace ModelTransfer
             readFromFileTimer.Interval = 1000;
             readFromFileTimer.Enabled = true;
             readFromFileTimer.Start();
+
             readModelsFromFile();
 
             if (modelBundle != null)
@@ -784,8 +792,11 @@ namespace ModelTransfer
                             //deserialize
                             using (Stream stream = File.Open(fileName, FileMode.Open))
                             {
-                                BinaryFormatter bformatter = new BinaryFormatter();
-                                modelBundle = (ModelBundle)bformatter.Deserialize(stream);
+                                using (GZipStream decompressedStream = new GZipStream(stream, CompressionMode.Decompress))
+                                {
+                                    BinaryFormatter bformatter = new BinaryFormatter();
+                                    modelBundle = (ModelBundle)bformatter.Deserialize(decompressedStream);
+                                }
                             }
                         }
                     }
