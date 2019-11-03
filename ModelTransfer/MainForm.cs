@@ -44,7 +44,6 @@ namespace ModelTransfer
         private ModelBundle modelBundle;            //modele wczytane z pliku
         private List<Model2D> selectedModels;       //modele wybrane przez użytkownika do zapisania w pliku
 
-        string timeLog = "";
 
         private Thread computationsThread;
 
@@ -306,7 +305,7 @@ namespace ModelTransfer
         private void saveToFileTimer_Tick(object sender, ElapsedEventArgs e)
         {
             timerTickNumber++;
-            decimal progressStep = 100*180 / (decimal)numberOfTriangles;                     //dobrane doświadczalnie, 200 oznacza szybkość zapisu do pliku - 200tys pkt/sekundę; 100 bo przeliczam na %
+            decimal progressStep = 100*120 / (decimal)numberOfTriangles;                     //dobrane doświadczalnie, 200 oznacza szybkość zapisu do pliku - 200tys pkt/sekundę; 100 bo przeliczam na %
             int progressBarValue = Convert.ToInt32(Math.Round((timerTickNumber * progressStep),0));
 
             showProgress(progressBarValue);
@@ -317,7 +316,7 @@ namespace ModelTransfer
         private void ReadFromFileTimer_Tick(object sender, ElapsedEventArgs e)
         {
             timerTickNumber++;
-            decimal progressStep = 100 * 5000 / (decimal)fileSize;                     //dobrane doświadczalnie, 10000 oznacza szybkość odczytu z pliku - 10 MB/sekundę; 100 bo przeliczam na %
+            decimal progressStep = 100 * 3000 / (decimal)fileSize;                     //dobrane doświadczalnie, 10000 oznacza szybkość odczytu z pliku - 10 MB/sekundę; 100 bo przeliczam na %
             int progressBarValue = Convert.ToInt32(Math.Round((timerTickNumber * progressStep), 0));
 
             showProgress(progressBarValue);
@@ -447,23 +446,25 @@ namespace ModelTransfer
         }
 
 
-        //zdarzenie w formatce GetFileNameForm
+        //zdarzenie w formatce GetFileNameForm, tu uruchamiam osobny wątek
         private void onGetFileNameForm_ButtonClick(object sender, MyEventArgs args)
         {
             showReadFromDBProgressItems();
-
+            string selectedModelIds = getSelectedModelIds();        //zanim uruchomię wątek, bo czytam z listy w tej formatce
             //uruchamiam wątek po wyświetleniu elementów paska postępu
-            computationsThread = new Thread(() => saveModelsFromDbToFile(args.fileName));
+            computationsThread = new Thread(() => saveModelsFromDbToFile(args.fileName, selectedModelIds));
             computationsThread.Start();
         }
 
 
 
         //metoda uruchamiana w osobnym wątku
-        private void saveModelsFromDbToFile(string fileName)
+        private void saveModelsFromDbToFile(string fileName, string selectedModelIds)
         {
-
-            readSelectedModelsFromDB();
+            //string timeLog = "";
+            //Stopwatch sw = new Stopwatch();
+            //sw.Start();
+            readSelectedModelsFromDB(selectedModelIds);
 
             showWriteToFileProgressItems();     //delegate
 
@@ -479,7 +480,11 @@ namespace ModelTransfer
 
             hideProgressItems();                //delegate
             disableSaveToFileButton();          //delegate
+            //sw.Stop();
+            //timeLog += "czas odczytu z bazy i zapisu do pliku   " + sw.ElapsedMilliseconds + "ms";
+            //timeLog += "\r\nliczba trójkątów  " + numberOfTriangles;
             MyMessageBox.displayAndClose("Modele zapisane do pliku",1);
+            //MyMessageBox.display(timeLog);
         }
 
 
@@ -528,11 +533,11 @@ namespace ModelTransfer
         }
 
 
-        private void readSelectedModelsFromDB()
+        private void readSelectedModelsFromDB(string selectedModelIds)
         {
 
             selectedModels = new List<Model2D>();
-            string selectedModelIds = getSelectedModelIds();;
+            //string selectedModelIds = getSelectedModelIds();
             
             string queryFilter = SqlQueries.getModelsByIdFilter.Replace("@iDs", selectedModelIds);
 
@@ -607,10 +612,13 @@ namespace ModelTransfer
                 {
                     modelIds += (checkedModel.Text + ",");
                 }
+
             }
             int index = modelIds.LastIndexOf(",");
             return modelIds.Remove(index, 1);
         }
+
+
 
         private void readPowierzchniaFromDB(Model2D model)
         {
@@ -679,9 +687,9 @@ namespace ModelTransfer
 
         private void writeModelsToFile(string fileName)
         {
-            ModelBundle mb = new ModelBundle();
-            mb.models = selectedModels;
-            mb.checkedDirectories = directoryTreeControl1.checkedDirectories;
+            ModelBundle modelBundle = new ModelBundle();
+            modelBundle.models = selectedModels;
+            modelBundle.checkedDirectories = directoryTreeControl1.checkedDirectories;
             string fileSaveDir = currentPath;
 
             if (fileName == null || fileName == "")
@@ -694,15 +702,24 @@ namespace ModelTransfer
             }
 
             string serializationFile = Path.Combine(fileSaveDir, fileName);
-
-            //serialize
-            using (Stream stream = File.Open(serializationFile, FileMode.Create))
+            try
             {
-                using (var compressionStream = new GZipStream(stream, CompressionMode.Compress))
+                //serialize
+                using (Stream stream = File.Open(serializationFile, FileMode.Create))
                 {
-                    BinaryFormatter bformatter = new BinaryFormatter();
-                    bformatter.Serialize(compressionStream, mb);
+                    using (BufferedStream bufStream = new BufferedStream(stream))
+                    {
+                        using (GZipStream compressedStream = new GZipStream(bufStream, CompressionMode.Compress))
+                        {
+                            BinaryFormatter bformatter = new BinaryFormatter();
+                            bformatter.Serialize(compressedStream, modelBundle);
+                        }
+                    }
                 }
+            }
+            catch (OutOfMemoryException exc)
+            {
+                MyMessageBox.display(exc.Message + "\r\nwriteModelsToFile");
             }
             //timer jest potrzebny do paska postępu, uruchomiony został w metodzie "saveModelsFromDbToFile", teraz po zapisaniu pliku zamykam go
             saveToFileTimer.Stop();
