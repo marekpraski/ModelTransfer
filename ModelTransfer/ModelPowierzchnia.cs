@@ -8,7 +8,7 @@ using System.Data;
 namespace ModelTransfer
 {
     [Serializable]
-    public class Powierzchnia
+    public class ModelPowierzchnia
     {
 
         #region Region - parametry opisowe powierzchni

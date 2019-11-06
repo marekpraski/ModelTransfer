@@ -15,8 +15,8 @@ namespace ModelTransfer
         static void Main(string[] args)
         {
             try { 
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
                 Application.Run(new MainForm(args[0], args[1]));
                 //Application.Run(new Form1());
         }

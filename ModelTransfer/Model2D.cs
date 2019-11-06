@@ -14,6 +14,8 @@ namespace ModelTransfer
         #region Region parametry opisowe modelu
 
         public object idModel { get; set; }
+        public int IdModelAfterRestore { get; set; }        //przypisany po odtworzeniu deklaracji modeli do bazy; stary ID potrzebny do powiązania modelu z Powierzchnią, wczytywaną później
+
         public object nazwaModel { get; set; }
         public object opisModel { get; set; }
         public object dataModel { get; set; }
@@ -37,7 +39,7 @@ namespace ModelTransfer
 
         #region Region - elementy składowe modelu
 
-        public List<Powierzchnia> powierzchnieList { get; }
+        public List<ModelPowierzchnia> powierzchnieList { get; }
 
         public ModelDirectory modelDir  {get; set;}
 
@@ -47,19 +49,19 @@ namespace ModelTransfer
 
         public Model2D()
         {
-            powierzchnieList = new List<Powierzchnia>();
+            powierzchnieList = new List<ModelPowierzchnia>();
         }
 
-        public void addPowierzchnia(Powierzchnia pow)
+        public void addPowierzchnia(ModelPowierzchnia pow)
         {
             powierzchnieList.Add(pow);
         }
 
 
 
-        public void setNewModelId(int newModelId)
+        public void setNewModelIdInPowierzchnia(int newModelId)
         {
-            foreach (Powierzchnia pow in powierzchnieList)
+            foreach (ModelPowierzchnia pow in powierzchnieList)
             {
                 pow.idModel = newModelId;
 

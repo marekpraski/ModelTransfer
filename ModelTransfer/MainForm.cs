@@ -40,16 +40,15 @@ namespace ModelTransfer
         private string[] modelSaveOptions = { "same punkty", "pełne modele" };
 
 
-
-        private ModelBundle modelBundle;            //modele wczytane z pliku
-        private List<Model2D> selectedModels;       //modele wybrane przez użytkownika do zapisania w pliku
+        private List<Model2D> selectedModelDeclarations;       //modele wybrane przez użytkownika do zapisania w pliku
+        private Dictionary<object, int> modelIdsAfterRestoreDict = new Dictionary<object, int>();     //kluczem jest Id modelu w starej bazie, wartością Id modelu po przeniesieniu do nowej bazy
 
 
         private Thread computationsThread;
 
         private int saveModelOption = 0;        //ustawiany po naciśnięciu przycisku zapisu do pliku na podstawie wyboru opcji w kombo
 
-        private string[] fileNames;             //pliki .bin z modelami wybrane przez użytkownika
+        private string fileNameToReadFrom;               //plik .bin z modelami wybrany przez użytkownika
 
         private bool directoriesChecked = false;        //aktualizowana przez zdarzenie zafajkowania checkboxa w drzewie katalogów; 
                                                         //powoduje zatrzymanie wypełniania okna listy modeli po zaznaczeniu katalogu
@@ -60,7 +59,7 @@ namespace ModelTransfer
         private int numberOfTriangles = 0;                     //liczba trójkątów do zapisu z bazy danych do pliku; do sterowania paskiem postępu oraz ostrzeżeniem o dużej ilości danych do zapisu
 
         private int fileSize = 0;                       //wielkość pliku do odczytu
-        int timerTickNumber = 0;
+
 
         #endregion
 
@@ -107,8 +106,7 @@ namespace ModelTransfer
         private void resetParameters()
         {
             this.fileSize = 0;
-            this.fileNames = null;
-            this.timerTickNumber = 0;
+            this.fileNameToReadFrom = null;
             this.numberOfTriangles = 0;
         }
 
@@ -199,7 +197,7 @@ namespace ModelTransfer
         //zatwierdzenie wyboru plików w eksploratorze
         private void OpenFileDialog1_FileOk(object sender, CancelEventArgs e)
         {
-            fileNames = openFileDialog1.FileNames;
+            this.fileNameToReadFrom = openFileDialog1.FileName;                                               //do przerobienia, przekazywać nazwę pliku jako argument
             GetDirectoryAndUserForm getDirectoryAndUser = new GetDirectoryAndUserForm(reader);
             getDirectoryAndUser.acceptButtonClickedEvent += onGetUserAndDirectory_ButtonClick;
             getDirectoryAndUser.ShowDialog();
@@ -264,70 +262,32 @@ namespace ModelTransfer
 #region Region - obsługa paska postępu
 
         //wskaźnik do funkcji sterującej paskiem postępu
-        public delegate void showProgressDelegate(int number, int modelsTotal);
+        public delegate void showProgressDelegate(int number, int modelsTotal, string modelName);
 
         //funkcja sterująca paskiem postępu
-        private void showProgress(int number, int modelsTotal)
+        private void showProgress(int number, int modelsTotal, string modelName)
         {
             if (this.InvokeRequired)
             {
-                this.Invoke(new showProgressDelegate(showProgress), number, modelsTotal);
+                this.Invoke(new showProgressDelegate(showProgress), number, modelsTotal, modelName);
             }
             else
             {
                 int percent = number * 100 / modelsTotal;
-                progressBar1.Value = percent;
-                label1.Text = number.ToString() + " / " + modelsTotal.ToString();
-            }
-        }
-
-
-        public delegate void showProgressByStepDelegate(int progressBarValue);
-
-        //funkcja sterująca paskiem postępu
-        private void showProgress(int progressBarValue)
-        {
-            if (this.InvokeRequired)
-            {
-                this.Invoke(new showProgressByStepDelegate(showProgress));
-            }
-            else
-            {
-                if (progressBar1.Value < 90 && progressBarValue<=100)    //postęp dobrany jest doświadczalnie, więc gdy transfer okaże się mniejszy niż zakladany i pasek za szybko dojdzie do końca to niech czeka na 90%
-                                                                        //gdy powyżej 100 to wywala się
+                if (percent <= 100)
                 {
-                    progressBar1.Value = progressBarValue;
+                    progressBar1.Value = percent;
                 }
+                else
+                {
+                    progressBar1.Value = 100;
+                }
+                numberLabel.Text = number.ToString() + " / " + modelsTotal.ToString();
+                modelNameLabel.Text = modelName;
             }
         }
 
-        //timer używam do obsługi paska postępu podczas zapisywania modeli do pliku
-        private void saveToFileTimer_Tick(object sender, ElapsedEventArgs e)
-        {
-            timerTickNumber++;
-            decimal progressStep = 100*120 / (decimal)numberOfTriangles;                     //dobrane doświadczalnie, 200 oznacza szybkość zapisu do pliku - 200tys pkt/sekundę; 100 bo przeliczam na %
-            int progressBarValue = Convert.ToInt32(Math.Round((timerTickNumber * progressStep),0));
 
-            showProgress(progressBarValue);
-        }
-
-
-        //timer używam do obsługi paska postępu podczas czytania modeli z pliku
-        private void ReadFromFileTimer_Tick(object sender, ElapsedEventArgs e)
-        {
-            timerTickNumber++;
-            decimal progressStep = 100 * 3000 / (decimal)fileSize;                     //dobrane doświadczalnie, 10000 oznacza szybkość odczytu z pliku - 10 MB/sekundę; 100 bo przeliczam na %
-            int progressBarValue = Convert.ToInt32(Math.Round((timerTickNumber * progressStep), 0));
-
-            showProgress(progressBarValue);
-        }
-
-
-        private void AbortButton_Click(object sender, EventArgs e)
-        {
-            computationsThread.Abort();
-            hideProgressItems();
-        }
 
         public delegate void hideProgressItemsDelegate();
         private void hideProgressItems()
@@ -338,85 +298,46 @@ namespace ModelTransfer
             }
             else
             {
-                label1.Visible = false;
-                label2.Visible = false;
+                numberLabel.Visible = false;
+                infoLabel.Visible = false;
+                modelNameLabel.Visible = false;
                 progressBar1.Visible = false;
                 progressAreaPanel.Visible = false;
             }
         }
 
 
-        //czytanie z bazy danych i zapisywanie do pliku
-        private void showReadFromDBProgressItems()
+
+        //elementy paska postępu
+        private void showProgressItems(string info)
         {
             progressAreaPanel.Visible = true;
-            label1.Visible = true;
-            label1.Text = "";
-            label2.Visible = true;
-            label2.Text = "wczytuję modele z bazy danych";
+            numberLabel.Visible = true;
+            numberLabel.Text = "";
+            modelNameLabel.Visible = true;
+            modelNameLabel.Text = "";
+            infoLabel.Visible = true;
+            infoLabel.Text = info;
             progressBar1.Visible = true;
             progressBar1.Value = 0;
         }
 
 
-        public delegate void showWriteToFileProgressItemsDelegate();
 
-        private void showWriteToFileProgressItems()
+        private void AbortButton_Click(object sender, EventArgs e)
         {
-            if (this.InvokeRequired)
-            {
-                this.Invoke(new showWriteToFileProgressItemsDelegate(showWriteToFileProgressItems));
-            }
-            else
-            {
-                progressAreaPanel.Visible = true;
-                label1.Visible = true;
-                label1.Text = "";
-                label2.Visible = true;
-                label2.Text = "zapisuję modele do pliku na dysku";
-                progressBar1.Visible = true;
-                progressBar1.Value = 0;
-            }
+            computationsThread.Abort();
+            hideProgressItems();
         }
 
 
-        //czytanie z pliku i zapisywanie do bazy
-        private void showReadFromFileProgressItems()
-        {
-            progressAreaPanel.Visible = true;
-            label1.Visible = true;
-            label1.Text = "";
-            label2.Visible = true;
-            label2.Text = "wczytuję plik z dysku";
-            progressBar1.Visible = true;
-            progressBar1.Value = 0;
-        }
 
-        public delegate void showWriteToDBProgressItemsDelegate();
-        private void showWriteToDBProgressItems()
-        {
-            if (this.InvokeRequired)
-            {
-                this.Invoke(new showWriteToDBProgressItemsDelegate(showWriteToDBProgressItems));
-            }
-            else
-            {
-                progressAreaPanel.Visible = true;
-                label1.Visible = true;
-                label1.Text = "";
-                label2.Visible = true;
-                label2.Text = "zapisuję modele do bazy danych";
-                progressBar1.Visible = true;
-            }
-        }
-
-
-#endregion
+        #endregion
 
 
 
 
-#region Region - czytanie modeli z bazy danych i zapisywanie do pliku
+        #region Region - czytanie modeli z bazy danych i zapisywanie do pliku
 
         private void onTreeviewDirectorySelected(object sender, MyEventArgs args)
         {
@@ -449,7 +370,7 @@ namespace ModelTransfer
         //zdarzenie w formatce GetFileNameForm, tu uruchamiam osobny wątek
         private void onGetFileNameForm_ButtonClick(object sender, MyEventArgs args)
         {
-            showReadFromDBProgressItems();
+            showProgressItems("zapisuję do pliku");
             string selectedModelIds = getSelectedModelIds();        //zanim uruchomię wątek, bo czytam z listy w tej formatce
             //uruchamiam wątek po wyświetleniu elementów paska postępu
             computationsThread = new Thread(() => saveModelsFromDbToFile(args.fileName, selectedModelIds));
@@ -461,30 +382,14 @@ namespace ModelTransfer
         //metoda uruchamiana w osobnym wątku
         private void saveModelsFromDbToFile(string fileName, string selectedModelIds)
         {
-            //string timeLog = "";
-            //Stopwatch sw = new Stopwatch();
-            //sw.Start();
-            readSelectedModelsFromDB(selectedModelIds);
-
-            showWriteToFileProgressItems();     //delegate
-
-            // 
-            // uruchamiam timer1 potrzebny do paska postępu; pasek popychany zdarzeniem Timer1_Tick
-            // 
-            this.saveToFileTimer.Elapsed += saveToFileTimer_Tick;
-            this.saveToFileTimer.Interval = 1000;
-            saveToFileTimer.Enabled = true;
-            saveToFileTimer.Start();
+            readSelectedModelDeclarationsFromDB(selectedModelIds);
 
             writeModelsToFile(fileName);
 
             hideProgressItems();                //delegate
             disableSaveToFileButton();          //delegate
-            //sw.Stop();
-            //timeLog += "czas odczytu z bazy i zapisu do pliku   " + sw.ElapsedMilliseconds + "ms";
-            //timeLog += "\r\nliczba trójkątów  " + numberOfTriangles;
+
             MyMessageBox.displayAndClose("Modele zapisane do pliku",1);
-            //MyMessageBox.display(timeLog);
         }
 
 
@@ -533,10 +438,12 @@ namespace ModelTransfer
         }
 
 
-        private void readSelectedModelsFromDB(string selectedModelIds)
+        //czyta tylko z tablicy DefModel2D, dane zostaną dodane później do każdego modelu osobno i będą dopisywane do pliku osobno
+        //dane z tej metody będą użyte do odtworzenia struktury, do której następnie będą iteracyjnie dopisane dane 
+        private void readSelectedModelDeclarationsFromDB(string selectedModelIds)
         {
 
-            selectedModels = new List<Model2D>();
+            selectedModelDeclarations = new List<Model2D>();
             //string selectedModelIds = getSelectedModelIds();
             
             string queryFilter = SqlQueries.getModelsByIdFilter.Replace("@iDs", selectedModelIds);
@@ -544,8 +451,6 @@ namespace ModelTransfer
             QueryData modelData = readModelsFromDB(queryFilter);
             List<object[]> models = modelData.getQueryData();
             List<string> paramTypes = modelData.getDataTypes();
-
-            int modelsTotal = models.Count;       //do paska postępu
 
             for (int i=0; i< models.Count; i++)
             {
@@ -581,11 +486,8 @@ namespace ModelTransfer
                 directoryTreeControl1.checkedDirectories.TryGetValue(model2D.directoryId.ToString(), out modelDir);
                 model2D.modelDir = modelDir;
 
-                readPowierzchniaFromDB(model2D);
-                selectedModels.Add(model2D);
+                selectedModelDeclarations.Add(model2D);
 
-                //do paska postępu
-                showProgress(i+1, modelsTotal);
             }
 
         }
@@ -637,7 +539,7 @@ namespace ModelTransfer
 
             for(int i=0; i < powierzchnieData.getDataRowsNumber(); i++)
             {
-                Powierzchnia pow = new Powierzchnia();
+                ModelPowierzchnia pow = new ModelPowierzchnia();
 
                 pow.idPow = powierzchnieData.getQueryData()[i][SqlQueries.getPowierzchnie_idPowIndex];
 
@@ -656,7 +558,7 @@ namespace ModelTransfer
             }
         }
 
-        private void readPowierzchniaDataFromDB(Powierzchnia pow)
+        private void readPowierzchniaDataFromDB(ModelPowierzchnia pow)
         {
             string query = "";
 
@@ -685,11 +587,10 @@ namespace ModelTransfer
 
         }
 
+
+        //w pliku zapisane są ciągiem pary: deklaracja długości danych(4 bajty) + buffer zawierający dane
         private void writeModelsToFile(string fileName)
         {
-            ModelBundle modelBundle = new ModelBundle();
-            modelBundle.models = selectedModels;
-            modelBundle.checkedDirectories = directoryTreeControl1.checkedDirectories;
             string fileSaveDir = currentPath;
 
             if (fileName == null || fileName == "")
@@ -698,22 +599,61 @@ namespace ModelTransfer
             }
             else
             {
-               fileName += ".bin";
+                fileName += ".bin";
             }
 
             string serializationFile = Path.Combine(fileSaveDir, fileName);
+
+            initializeFile(serializationFile);
+
+            int modelsTotal = selectedModelDeclarations.Count;       //do paska postępu
+            int i = 0;
+            foreach (Model2D model in selectedModelDeclarations)
+            {
+                showProgress(i + 1, modelsTotal, model.nazwaModel.ToString());
+
+                readPowierzchniaFromDB(model);
+                addModelToFile(serializationFile, model);
+                //do paska postępu
+                i++;
+            }
+        }
+
+
+
+        //tworzy plik a następnie zapisuje strukturę danych, tj deklaracje modeli i słownik katalogów
+        private void initializeFile(string serializationFile)
+        {
+            ModelBundle modelBundle = new ModelBundle();
+            modelBundle.models = selectedModelDeclarations;
+            modelBundle.checkedDirectories = directoryTreeControl1.checkedDirectories;
+            
             try
             {
                 //serialize
-                using (Stream stream = File.Open(serializationFile, FileMode.Create))
+                using (FileStream stream = new FileStream(serializationFile, FileMode.Create))
                 {
-                    using (BufferedStream bufStream = new BufferedStream(stream))
+
+                    MemoryStream originalMemoryStream = new MemoryStream();
+                    MemoryStream compressedMemoryStream = new MemoryStream();
+
+                    BinaryFormatter formatter = new BinaryFormatter();
+                    formatter.Serialize(originalMemoryStream, modelBundle);
+
+                    using(GZipStream gzipStream = new GZipStream(compressedMemoryStream, CompressionMode.Compress))
                     {
-                        using (GZipStream compressedStream = new GZipStream(bufStream, CompressionMode.Compress))
-                        {
-                            BinaryFormatter bformatter = new BinaryFormatter();
-                            bformatter.Serialize(compressedStream, modelBundle);
-                        }
+                        originalMemoryStream.WriteTo(gzipStream);
+                    }
+
+                    byte[] buffer = compressedMemoryStream.ToArray();
+                    int bufferSize = buffer.Length;
+                    compressedMemoryStream.Close();
+                    originalMemoryStream.Close();
+
+                    using (BinaryWriter binWriter = new BinaryWriter(stream))
+                    {
+                        binWriter.Write(bufferSize);            //pierwsze 4 bajty
+                        binWriter.Write(buffer);
                     }
                 }
             }
@@ -721,22 +661,61 @@ namespace ModelTransfer
             {
                 MyMessageBox.display(exc.Message + "\r\nwriteModelsToFile");
             }
-            //timer jest potrzebny do paska postępu, uruchomiony został w metodzie "saveModelsFromDbToFile", teraz po zapisaniu pliku zamykam go
-            saveToFileTimer.Stop();
-            saveToFileTimer.Enabled = false;
         }
 
-#endregion
+
+        private void addModelToFile(string serializationFile, Model2D model)
+        {
+            ModelBundle modelDataBundle = new ModelBundle();
+            modelDataBundle.addModel(model);
+            try
+            {
+                //serialize
+                using (FileStream stream = new FileStream(serializationFile, FileMode.Open))
+                {
+
+                    MemoryStream originalMemoryStream = new MemoryStream();
+                    MemoryStream compressedMemoryStream = new MemoryStream();
+
+                    BinaryFormatter formatter = new BinaryFormatter();
+                    formatter.Serialize(originalMemoryStream, modelDataBundle);
+
+                    using (GZipStream gzipStream = new GZipStream(compressedMemoryStream, CompressionMode.Compress))
+                    {
+                        originalMemoryStream.WriteTo(gzipStream);
+                    }
+
+                    byte[] buffer = compressedMemoryStream.ToArray();
+                    int bufferSize = buffer.Length;
+                    compressedMemoryStream.Close();
+                    originalMemoryStream.Close();
+
+                    using (BinaryWriter binWriter = new BinaryWriter(stream))
+                    {
+                        stream.Position = stream.Length;
+                        binWriter.Write(bufferSize);            //pierwsze 4 bajty
+                        binWriter.Write(buffer);
+                    }
+                }
+            }
+            catch (OutOfMemoryException exc)
+            {
+                MyMessageBox.display(exc.Message + "\r\nwriteModelsToFile");
+            }
+        }
+
+
+        #endregion
 
 
 
-#region Region - czytanie modeli z pliku binarnego i zapisywanie do bazy danych
+        #region Region - czytanie modeli z pliku binarnego i zapisywanie do bazy danych
 
 
         //zdarzenie wywołane w formatce GetDirectoryAndUserForm
         private void onGetUserAndDirectory_ButtonClick(object sender, MyEventArgs args)
         {
-            showReadFromFileProgressItems();
+            showProgressItems("zapisuję do bazy danych");
 
             computationsThread = new Thread(() => writeModelsFromFileToDB(args));
             computationsThread.Start();
@@ -747,23 +726,69 @@ namespace ModelTransfer
         //metoda uruchamiana w osobnym wątku
         private void writeModelsFromFileToDB(MyEventArgs args)
         {
-            // 
-            // readFromFileTimer
-            // 
-            readFromFileTimer.Elapsed += ReadFromFileTimer_Tick;
-            readFromFileTimer.Interval = 1000;
-            readFromFileTimer.Enabled = true;
-            readFromFileTimer.Start();
+            FileManipulator fm = new FileManipulator();
 
-            readModelsFromFile();
-
-            if (modelBundle != null)
+            if (fm.assertFileExists(this.fileNameToReadFrom))
             {
-                showWriteToDBProgressItems();       //delegat
-                writeModelsToDB(args);
-                MyMessageBox.displayAndClose("Modele wczytane", 1);
-                hideProgressItems();            //delegat
-                refreshDirectoryTree();      //delegat          
+                int streamPosition = 0;
+                int dataPacketNumber = 0;
+                int totalNumberOfPackets = 0;                   //do paska postępu
+                ModelBundle modelDataBundle = new ModelBundle();
+                try
+                {
+                    do {
+                        //deserialize
+                        using (FileStream stream = new FileStream(this.fileNameToReadFrom, FileMode.Open))
+                        {
+
+                            int dataPacketLength = 0;
+                            byte[] buffer;
+                            using (BinaryReader bReader = new BinaryReader(stream))
+                            {
+                                stream.Position = streamPosition;
+                                dataPacketLength = bReader.ReadInt32();        //najpierw wpis 4 bajty określa długość paczki, która po nim następuje
+                                buffer = new byte[dataPacketLength];
+                                bReader.Read(buffer, 0, dataPacketLength);
+                            }
+                            MemoryStream compressedStream = new MemoryStream(buffer);
+                            MemoryStream decompressedStream = new MemoryStream();
+
+                            using (GZipStream gzipStream = new GZipStream(compressedStream, CompressionMode.Decompress))
+                            {
+                                gzipStream.CopyTo(decompressedStream);
+                            }
+                            decompressedStream.Position = 0;
+                            BinaryFormatter bformatter = new BinaryFormatter();
+                            modelDataBundle = (ModelBundle)bformatter.Deserialize(decompressedStream);
+
+                            if (dataPacketNumber == 0)
+                            {
+                                totalNumberOfPackets = modelDataBundle.models.Count;
+                                writeModelDeclarationsToDB(args, modelDataBundle);
+                            }
+                            else
+                            {
+                                showProgress(dataPacketNumber, totalNumberOfPackets, modelDataBundle.models[0].nazwaModel.ToString());       //pasek postępu
+                                writePowierzchniaToDB(modelDataBundle);
+                            }
+                            compressedStream.Close();
+                            decompressedStream.Close();
+                            streamPosition += dataPacketLength + 4;     //tj. przesuwam o nagłówek (int czyli 4 bajty) i długość właśnie przeczytanego pakietu
+
+                            dataPacketNumber++;
+
+                        }
+                    }
+                    while (dataPacketNumber <= totalNumberOfPackets);
+
+                    MyMessageBox.displayAndClose("Modele wczytane", 1);
+                    hideProgressItems();            //delegat
+                    refreshDirectoryTree();      //delegat          
+                }
+                catch (ArgumentException ex)
+                {
+                    MyMessageBox.display(ex.Message, MessageBoxType.Error);
+                } 
             }
             else
             {
@@ -788,52 +813,12 @@ namespace ModelTransfer
 
 
 
-        private void readModelsFromFile()
+
+        private void writeModelDeclarationsToDB(MyEventArgs args, ModelBundle modelDeclarationsFromFileBundle)
         {
+            List<Model2D> models = modelDeclarationsFromFileBundle.models;
 
-            FileManipulator fm = new FileManipulator();
-            if (this.fileNames.Length > 0)
-            {
-                foreach (string fileName in this.fileNames)         //teroretycznie przygotowane do czytania z wielu plików, ale zapisywanie tego później do bazy może być problematyczne
-                                                                    //bez każdorazowego wskazania, gdzie katalogi mają być zakotwiczone
-                {
-
-                    modelBundle = new ModelBundle();
-
-                    try
-                    {
-                        if (fm.assertFileExists(fileName))
-                        {
-                            FileInfo info = new FileInfo(fileName);
-                            this.fileSize = Convert.ToInt32(info.Length/1000);
-                            //deserialize
-                            using (Stream stream = File.Open(fileName, FileMode.Open))
-                            {
-                                using (GZipStream decompressedStream = new GZipStream(stream, CompressionMode.Decompress))
-                                {
-                                    BinaryFormatter bformatter = new BinaryFormatter();
-                                    modelBundle = (ModelBundle)bformatter.Deserialize(decompressedStream);
-                                }
-                            }
-                        }
-                    }
-                    catch (ArgumentException ex)
-                    {
-                        MyMessageBox.display(ex.Message, MessageBoxType.Error);
-                    }
-                }
-            }
-            readFromFileTimer.Stop();
-            readFromFileTimer.Enabled = false;
-        }
-
-
-
-        private void writeModelsToDB(MyEventArgs args)
-        {
-            List<Model2D> models = modelBundle.models;
-
-            Dictionary<string, ModelDirectory> checkedDirectories = modelBundle.checkedDirectories;
+            Dictionary<string, ModelDirectory> checkedDirectories = modelDeclarationsFromFileBundle.checkedDirectories;
 
             writer = new DBWriter(dbConnection);
             DBValueTypeConverter converter = new DBValueTypeConverter();
@@ -852,7 +837,6 @@ namespace ModelTransfer
                 writeDirectoryTreeToDB(checkedDirectories, args.selectedDirectoryId);
             }
 
-            int modelsTotal = models.Count;       //do paska postępu
             //po kolei wpisuję deklaracje wszystkich modeli, po jednym, do tabeli DefModel2D
             for (int i = 0; i < models.Count; i++)
             {
@@ -862,17 +846,14 @@ namespace ModelTransfer
                 string opisModel = converter.getConvertedValue(model.opisModel, model.opisModel_dataType);
                 string dataModel = converter.getConvertedValue(model.dataModel, model.dataModel_dataType);
 
-                //do paska postępu
-                showProgress(i+1, modelsTotal);
-
-            if(restoreDirectoryTree && checkedDirectories.Count > 0)
-            {
-                newDirectoryId = model.modelDir.newId;
-            }
-            else
-            {
-                newDirectoryId = args.selectedDirectoryId;
-            }
+                if(restoreDirectoryTree && checkedDirectories.Count > 0)
+                {
+                    newDirectoryId = model.modelDir.newId;
+                }
+                else
+                {
+                    newDirectoryId = args.selectedDirectoryId;
+                }
 
                 string query = SqlQueries.insertModel.Replace("@nazwaModel", nazwaModel).Replace("@opisModel", opisModel).Replace("@dataModel", dataModel).Replace("@idUzytk", newIdUzytk).Replace("@czyArch", newCzyArch).Replace("@directoryId", newDirectoryId).Replace("@idWlasciciel", newIdWlasciciel);
                 writer.writeToDB(query);
@@ -887,10 +868,8 @@ namespace ModelTransfer
                 }
 
                 //w każdym modelu w powierzchniach zmieniam Id modelu na nowy, w nowej bazie danych
-                model.setNewModelId(maxModelIdInDB);
-
-                //po zapisaniu deklaracji modelu zapisuję dane szczegółowe tego modelu, tzn powierzchnie itp, które są w osobnych tablicach
-                writePowierzchniaToDB(model);
+                model.IdModelAfterRestore = maxModelIdInDB;
+                modelIdsAfterRestoreDict.Add(model.idModel, model.IdModelAfterRestore);
             }
 
         }
@@ -927,19 +906,21 @@ namespace ModelTransfer
             foreach(string dirId in checkedDirectories.Keys)
             {
                 checkedDirectories.TryGetValue(dirId, out dir);
-                if (dir.parentId != null && dir.parentId !="")      //występuje gdy wytnie się gałąź od pnia, tzn nie ma parenta
+                if (dir.parentId !="")                       //tzn gdy gałąź miała parenta w oryginalnej bazie danych
                 {
-                    if (parentDir != null)      //występuje to w sytuacji wycięcia kawałka gałęzi; po wycięciu najwyższa gałąź ma parenta, który jednak nie został zapisany do pliku
+                    checkedDirectories.TryGetValue(dir.parentId, out parentDir);
+
+                    if (parentDir != null)      // parentDir==null występuje to w sytuacji wycięcia kawałka gałęzi; po wycięciu najwyższa gałąź miałaa parenta w oryginalnej bazie danych, jednak nie został on zapisany do pliku
+                                                //tak więc w tej bazie gałąź musi zostać przypięta do pnia
                     {
-                        checkedDirectories.TryGetValue(dir.parentId, out parentDir);
                         query = SqlQueries.updateDirectoryParentId.Replace("@newParentId", parentDir.newId) + dir.newId;
                     }
-                    else
-                    {           //gdy wytnę kawałek gałęzi, to muszę ją podpiąć pod nowego parenta, którym będzie katalog wybrany przez użytkownika
+                    else              //gdy wytnę kawałek gałęzi, to muszę ją podpiąć pod nowego parenta, którym będzie katalog wybrany przez użytkownika
+                    {           
                         query = SqlQueries.updateDirectoryParentId.Replace("@newParentId", selectedRootDirId) + dir.newId;
                     }
                 }
-                else
+                else            //tzn gdy odetnie się gałąź od pnia, tzn nie ma parenta
                 {
                         //jeżeli parent Id był null, tzn gałąź została odcięta od pnia, to podpinam ten katalog pod wybrany przez użytkownika
                     query = SqlQueries.updateDirectoryParentId.Replace("@newParentId", selectedRootDirId) + dir.newId;
@@ -956,14 +937,19 @@ namespace ModelTransfer
             return int.Parse(res.getQueryData()[0][0].ToString());
         }
 
-        private void writePowierzchniaToDB(Model2D model)
+        private void writePowierzchniaToDB(ModelBundle modelDataBundle)
         {
+            Model2D model = modelDataBundle.models[0];              //każda paczka zawiera tylko jeden model
+            int newModelId = 0;
+            modelIdsAfterRestoreDict.TryGetValue(model.idModel, out newModelId);
+            model.setNewModelIdInPowierzchnia(newModelId);
+
             uint maxPowId = 0;
             string tableName = dbConnector.getTableNameFromQuery(SqlQueries.getPowierzchnieNoBlob);
 
             for(int i=0; i < model.powierzchnieList.Count; i++)
             {
-                Powierzchnia pow = model.powierzchnieList[i];
+                ModelPowierzchnia pow = model.powierzchnieList[i];
 
                 writer.writeBulkDataToDB(pow.powDataTable, tableName);
 
@@ -981,7 +967,6 @@ namespace ModelTransfer
                 //zapisuję dane szczegółowe każdej powierzchni do bazy, tj. punkty, trójkąty itd
                 writePowierzchniaDataToDB(pow);
             }
-
         }
 
         
@@ -994,7 +979,7 @@ namespace ModelTransfer
         }
 
 
-        private void writePowierzchniaDataToDB(Powierzchnia pow)
+        private void writePowierzchniaDataToDB(ModelPowierzchnia pow)
         {
             string tableName = "";
             uint newIdPow = uint.Parse(pow.idPow.ToString());

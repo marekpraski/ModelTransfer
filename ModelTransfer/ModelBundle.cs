@@ -20,5 +20,10 @@ namespace ModelTransfer
             checkedDirectories = new Dictionary<string, ModelDirectory>();
         }
 
+        public void addModel(Model2D model)
+        {
+            models.Add(model);
+        }
+
     }
 }

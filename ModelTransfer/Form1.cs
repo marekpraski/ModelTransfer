@@ -139,59 +139,25 @@ namespace ModelTransfer
 
         #endregion
 
-        BinaryFormatter bformatter;
-        FileStream stream;
-        BinaryWriter binWriter;
-        BinaryReader binReader;
-
-        long headerLength;
-
-
-      
-
-        //tworzę file header i zapisuję jego długość na pozycji 0
-        private void Button5_Click(object sender, EventArgs e)
-        {
-            string serializationFile = @"C:\testDesktop\conf\testFileNotCompressed.bin";
-
-            stream = File.Open(serializationFile, FileMode.Create);
-            binWriter = new BinaryWriter(stream);
-            int i = int.Parse(textBox2.Text);
-            long nr = 0;
-            for
-                (int k = 0; k<i; k++)
-            {
-                binWriter.Write(nr+k);
-            }
-            headerLength = stream.Length;
-
-            //resetuję pozycję strumienia i zapisuję wielkość nagłówka
-            stream.Position = 0;
-            binWriter.Write(i);
-            binWriter.Dispose();
-            stream.Close();
-
-
-        }
 
         private void Button6_Click(object sender, EventArgs e)
         {
-           
-
-            
-            int position = int.Parse(textBox4.Text);
-            position = position*8;
 
 
-            long Data =long.Parse(textBox3.Text);
+
+            //int position = int.Parse(textBox4.Text);
+            //position = position*8;
 
 
-            long s = stream.Length;
+            //long Data =long.Parse(textBox3.Text);
 
 
-                    //stream.Position = position;
-                    binWriter.Write(Data);
-            
+            //long s = stream.Length;
+
+
+            //        //stream.Position = position;
+            //        binWriter.Write(Data);
+
         }
 
         private void Button7_Click(object sender, EventArgs e)
@@ -202,14 +168,14 @@ namespace ModelTransfer
             //byte[] dataPacketReadFromStream = new byte[16];
 
 
-                    //stream.Position = position;
+            //stream.Position = position;
 
             //r.Read(dataPacketReadFromStream, 0, 16);      //dane do zmiennej dataRwadFromStream zapisuje od pozycji 0 streamu, na podaną liczbę bajtów
             long number = binReader.ReadInt64();
-                
-                //stream.Position = position;
-                //stream.Read(Data, position, 8);
-            
+
+            //stream.Position = position;
+            //stream.Read(Data, position, 8);
+
 
 
             textBox6.Text = number.ToString();
@@ -217,127 +183,197 @@ namespace ModelTransfer
 
         private void Button4_Click(object sender, EventArgs e)
         {
-            string serializationFile = @"C:\testDesktop\conf\testFileNotCompressed.bin";
+            //string serializationFile = @"C:\testDesktop\conf\testFileNotCompressed.bin";
 
-            //serialize
-            stream = File.Open(serializationFile, FileMode.Open);
-            long l = stream.Length;
+            ////serialize
+            //stream = File.Open(serializationFile, FileMode.Open);
+            //long l = stream.Length;
 
-            binWriter = new BinaryWriter(stream);
+            //binWriter = new BinaryWriter(stream);
         }
 
         private void Button8_Click(object sender, EventArgs e)
         {
-            string serializationFile = @"C:\testDesktop\conf\testFileNotCompressed.bin";
+            //string serializationFile = @"C:\testDesktop\conf\testFileNotCompressed.bin";
 
-            //serialize
-            stream = File.Open(serializationFile, FileMode.Open);
-            binReader = new BinaryReader(stream);
+            ////serialize
+            //stream = File.Open(serializationFile, FileMode.Open);
+            //binReader = new BinaryReader(stream);
         }
 
         private void Button9_Click(object sender, EventArgs e)
         {
-            stream.Close();
+            //stream.Close();
         }
+
+
+        BinaryFormatter bformatter;
+
+
+        BinaryReader binReader;
+
+
+
+
+        long headerLength;
+
+
+        //tworzę plik, w nim file header i zapisuję jego długość na pozycji 0
+        private void Button5_Click(object sender, EventArgs e)
+        {
+            string serializationFile = @"C:\testDesktop\conf\testFileNotCompressed.bin";
+
+            FileStream stream = new FileStream(serializationFile, FileMode.Create);
+
+            BinaryWriter binWriter = new BinaryWriter(stream);
+            int i = int.Parse(textBox2.Text);
+            long nr = 0;
+            for
+                (int k = 0; k<=i; k++)
+            {
+                binWriter.Write(nr+k);
+            }
+            headerLength = stream.Length;
+            streamPositionForPacketReading = headerLength;
+
+            //resetuję pozycję strumienia i zapisuję wielkość nagłówka
+            stream.Position = 0;
+            binWriter.Write(i+1);
+            binWriter.Dispose();
+            stream.Close();
+
+
+        }
+
+
+
+        int packetPosition = 0;
+
 
         //dopisuję tekst na końcu pliku oraz wielkość tego pakietu na wybranej pozycji
         private void Button10_Click(object sender, EventArgs e)
         {
-            string log = "headerSize  " + headerLength.ToString() + "\r\n";
+            string log =  "headerSize  " + headerLength.ToString() + "\r\n";
             string serializationFile = @"C:\testDesktop\conf\testFileNotCompressed.bin";
-            int packetPosition = int.Parse(textBox8.Text);
+            packetPosition++;
+            textBox8.Text = packetPosition.ToString();
             string modelBundle = textBox7.Text;
             long packetSize;
-            long fileSizeBeforeAtach;
-            long fileSizeAfterAttach;
+            long fileSizeBeforeAppend;
+            long fileSizeAfterAppend;
             byte[] data;
+            byte[] data1;
             //serialize
-            using (Stream stream = File.Open(serializationFile, FileMode.Append))
+            using (FileStream stream = new FileStream(serializationFile, FileMode.Open))
             {
-                //stream.Position = stream.Length;
+                fileSizeBeforeAppend = stream.Length;
+                log += "stream przed dopisaniem  " + stream.Length.ToString() + "\r\n";
+
+                //paczkę zapisuję do strumienia w pamięci
+                MemoryStream originalMemoryStream = new MemoryStream();
+                MemoryStream compressedMemoryStream = new MemoryStream();
+
+                BinaryFormatter bformatter = new BinaryFormatter();
+                bformatter.Serialize(originalMemoryStream, modelBundle);
+
+                //paczkę kompresuję
+                using (GZipStream gzipStream = new GZipStream(compressedMemoryStream, CompressionMode.Compress))
+                    {
+                    originalMemoryStream.WriteTo(gzipStream);
+                }
+
+                data = compressedMemoryStream.ToArray();     //zapisuję strumień do tablicy
+                data1 = originalMemoryStream.ToArray();
+                originalMemoryStream.Close();
+                compressedMemoryStream.Close();
+
                 
-                    fileSizeBeforeAtach = stream.Length;
-                    log += "stream przed dołaczeniem  " + stream.Length.ToString() + "\r\n";
 
-                //using (BufferedStream bufStream = new BufferedStream(stream))
-                //{
-                //    data = new byte[bufStream.Length];
+                packetSize = data.Length;
+                BinaryWriter writer = new BinaryWriter(stream);
+                stream.Position = stream.Length;
+                writer.Write(data);
 
-                //    using (GZipStream compressionStream = new GZipStream(bufStream, CompressionMode.Compress))
-                //    {
-
-                        //long cs = compressionStream.Length;
-                        //log += "compressionStream.Length  " + cs.ToString() + "\r\n";
-                        BinaryFormatter bformatter = new BinaryFormatter();
-                        bformatter.Serialize(stream, modelBundle);
-
-                //    }
-                //}
-
-            }
-
-            using (Stream stream = File.Open(serializationFile, FileMode.Open))
-            {
-                fileSizeAfterAttach = stream.Length;
-                packetSize = fileSizeAfterAttach-fileSizeBeforeAtach;
-                log += "before  " + fileSizeBeforeAtach.ToString() + "\r\n";
-                log += "after  " + fileSizeAfterAttach.ToString() + "\r\n";
-                log += "packetSize  " + packetSize.ToString() + "\r\n";
-                binWriter = new BinaryWriter(stream);
+                //resetuję pozycję strumienia, żeby dopisać info w nagłówku
                 stream.Position = 8 * packetPosition;
-                binWriter.Write(packetSize);
-                binWriter.Dispose();
-                //stream.Close();
+                writer.Write(packetSize);
+
+                fileSizeAfterAppend = stream.Length;
+
+                log += "before  " + fileSizeBeforeAppend.ToString() + "\r\n";
+                log += "after  " + fileSizeAfterAppend.ToString() + "\r\n";
+                log += "packetSize  " + packetSize.ToString() + "\r\n";
+                writer.Dispose();
             }
-            MyMessageBox.display(log);
+
+            
+            //MyMessageBox.display(log);
         }
 
+        int packetNumber = 0;
+        long streamPositionForPacketReading = 0;
+        //przycisk odczytywania tekstu z podanej pozycji
         private void Button11_Click(object sender, EventArgs e)
         {
             string log = "";
-            int packetNumber = int.Parse(textBox10.Text);
+            packetNumber++;
+            textBox10.Text = packetNumber.ToString();
             string modelBundle = "";
             string serializationFile = @"C:\testDesktop\conf\testFileNotCompressed.bin";
             long numberOfDataPackets;
             long packetSize;
-            long firstPacketStartPosition;
             int packetInfoPosition;
             long packetEndPosition;
+            
 
             //czytam header pliku
-            using (Stream stream = File.Open(serializationFile, FileMode.Open))
+            using (FileStream stream = new FileStream(serializationFile, FileMode.Open))
             {
-                using (BinaryReader bReader = new BinaryReader(stream)) {
-                    numberOfDataPackets = bReader.ReadInt64();
-                    packetInfoPosition = 8*(packetNumber);
-                    stream.Position = packetInfoPosition;
-                    firstPacketStartPosition =  8*(numberOfDataPackets +1) ;
-                    packetSize = bReader.ReadInt64();
-                    packetEndPosition = firstPacketStartPosition + packetSize;
-                    bReader.Read();
-                        }
-            }
-            log += "numberOfDataPackets  " + numberOfDataPackets.ToString() + "\r\n";
-            log += "packetInfoPosition  " + packetInfoPosition.ToString() + "\r\n";
-            log += "packetSize  " + packetSize.ToString() +"\r\n";
-            log += "packetStartPosition  " + firstPacketStartPosition.ToString()  +"\r\n";
+                BinaryReader bReader = new BinaryReader(stream);
+                
+                numberOfDataPackets = bReader.ReadInt64();      //czytam jeden long od początku strumienia
 
-            //FileInfo info = new FileInfo(fileName);
-            //this.fileSize = Convert.ToInt32(info.Length / 1000);
+
+                packetInfoPosition = 8*(packetNumber);          //czytam jeden long na pozycji strumienia, gdzie jest informacja o pakiecie
+                stream.Position = packetInfoPosition;
+                packetSize = bReader.ReadInt64();
+
+                log += "numberOfDataPackets  " + numberOfDataPackets.ToString() + "\r\n";
+                log += "packetInfoPosition  " + packetInfoPosition.ToString() + "\r\n";
+                log += "packetSize  " + packetSize.ToString() +"\r\n";
+                
+
             //deserialize
-            using (Stream stream = File.Open(serializationFile, FileMode.Open))
-            {
-                stream.Position = firstPacketStartPosition;
-                //using (GZipStream decompressedStream = new GZipStream(stream, CompressionMode.Decompress))
-                //{
-                    BinaryFormatter bformatter = new BinaryFormatter();
-                    modelBundle = (string)bformatter.Deserialize(stream); //System.Runtime.Serialization.SerializationException: „Strumień wejściowy nie ma prawidłowego formatu binarnego. Zawartość początkowa (w bajtach): FF-01-00-00-00-00-00-00-00-06-01-00-00-00-0C-6A-61 ...”
 
-                // }
+                byte[] buffer = new byte[(int)packetSize];
+
+
+                if (packetNumber == 1)
+                {
+                    streamPositionForPacketReading = 8 * numberOfDataPackets;
+                }
+
+                stream.Position = streamPositionForPacketReading;
+                bReader.Read(buffer, 0, buffer.Length);
+
+                MemoryStream compressedMemoryStream = new MemoryStream(buffer);
+                MemoryStream decompressedMemoryStream = new MemoryStream();
+                using (GZipStream gzipStream = new GZipStream(compressedMemoryStream, CompressionMode.Decompress))
+                {
+                    gzipStream.CopyTo(decompressedMemoryStream);
+                    
+                }
+
+                    BinaryFormatter bformatter = new BinaryFormatter();
+                decompressedMemoryStream.Position = 0;
+                    modelBundle = (string)bformatter.Deserialize(decompressedMemoryStream); 
+
+
             }
+            streamPositionForPacketReading += packetSize;
 
             textBox9.Text = modelBundle;
-            MyMessageBox.display(log);
+            //MyMessageBox.display(log);
         }
     }
 

@@ -94,7 +94,7 @@
     <Compile Include="MyMessageBox.designer.cs">
       <DependentUpon>MyMessageBox.cs</DependentUpon>
     </Compile>
-    <Compile Include="Powierzchnia.cs" />
+    <Compile Include="ModelPowierzchnia.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="ProgramSettings.cs" />
     <Compile Include="ProgressEventArgs.cs" />
