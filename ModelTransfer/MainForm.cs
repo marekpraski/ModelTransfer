@@ -40,7 +40,7 @@ namespace ModelTransfer
         private string[] modelSaveOptions = { "same punkty", "pełne modele" };
 
 
-        private List<Model2D> selectedModelDeclarations;       //modele wybrane przez użytkownika do zapisania w pliku
+        private List<Model2D> selectedModelDeclarations = new List<Model2D>();       //modele wybrane przez użytkownika do zapisania w pliku
         private Dictionary<object, int> modelIdsAfterRestoreDict = new Dictionary<object, int>();     //kluczem jest Id modelu w starej bazie, wartością Id modelu po przeniesieniu do nowej bazy
 
 
@@ -55,10 +55,6 @@ namespace ModelTransfer
                                                         //jeżeli nie nałożę tej blokady, występuje konflikt pomiędzy wątkiem wczytującym modele w celu zapisania do pliku a wątkiem wypełniającym okno modeli
                                                         //co wywala błąd BDReadera (połączenie otwarte)
 
-        private int pointNumberWarningLevel = 10000;         //wpisana tu liczba jest w tysiącach, bo rzeczywistą warstość dzielę na 1000 po odczycie; sumaryczna liczba punktów dla których wyświetla się ostrzeżenie, że plik może być bardzo duży
-        private int numberOfTriangles = 0;                     //liczba trójkątów do zapisu z bazy danych do pliku; do sterowania paskiem postępu oraz ostrzeżeniem o dużej ilości danych do zapisu
-
-        private int fileSize = 0;                       //wielkość pliku do odczytu
 
 
         #endregion
@@ -105,9 +101,9 @@ namespace ModelTransfer
 
         private void resetParameters()
         {
-            this.fileSize = 0;
+            modelIdsAfterRestoreDict.Clear();
+            selectedModelDeclarations.Clear();
             this.fileNameToReadFrom = null;
-            this.numberOfTriangles = 0;
         }
 
 
@@ -163,13 +159,10 @@ namespace ModelTransfer
 
             if (modelsListView.CheckedItems.Count > 0 || getModelsFromDirectories)
             {
-                if (!cancelOperation())
-                {                    
-                    this.saveModelOption = saveModelOptionsCombo.SelectedIndex;
-                    GetFileNameForm fnForm = new GetFileNameForm();
-                    fnForm.GetFileNameEvent += onGetFileNameForm_ButtonClick;
-                    fnForm.ShowDialog();
-                }
+                this.saveModelOption = saveModelOptionsCombo.SelectedIndex;
+                GetFileNameForm fnForm = new GetFileNameForm();
+                fnForm.GetFileNameEvent += onGetFileNameForm_ButtonClick;
+                fnForm.ShowDialog();
             }
             else
             {
@@ -187,9 +180,10 @@ namespace ModelTransfer
 
         private void HelpButton_Click(object sender, EventArgs e)
         {
-            string pomocInfo = "Pojedyncze modele można wybierać po zwykłym zaznaczeniu katalogu" +
-                            "\r\nPo zaznaczeniu checkboxa przy katalogu kopiowane bedą wszystkie znajdujące się w nim modele;" + 
-                            "\r\n    niemożliwe jest wtedy wybranie tylko pojedynczych modeli";
+            string pomocInfo = "1. Pojedyncze modele można wybierać po zwykłym zaznaczeniu katalogu" +
+                            "\r\nPo zaznaczeniu checkboxa przy katalogu kopiowane bedą wszystkie znajdujące się w nim modele;" +
+                            "\r\n    niemożliwe jest wtedy wybranie tylko pojedynczych modeli\r\n" +
+                            "\r\n2. Anulowanie operacji podczas zapisu modeli do bazy nie wycofuje z bazy modeli już zapisanych";
             MyMessageBox.display(pomocInfo);
         }
 
@@ -201,56 +195,6 @@ namespace ModelTransfer
             GetDirectoryAndUserForm getDirectoryAndUser = new GetDirectoryAndUserForm(reader);
             getDirectoryAndUser.acceptButtonClickedEvent += onGetUserAndDirectory_ButtonClick;
             getDirectoryAndUser.ShowDialog();
-        }
-
-        //
-        //metody wspomagające powyższe zdarzenia
-        //
-
-        //sprawdzam sumaryczną liczbę punktów w modelach, żeby ostrzec przed możliwością dużego pliku
-        private bool cancelOperation()
-        {
-            
-            getNumberOfTriangles();
-            MyMessageBoxResults result = MyMessageBoxResults.Yes;
-
-            switch (saveModelOption)
-            {
-                case 0:
-                    result = generateWarning(numberOfTriangles/4);      //liczbę trójkątów mam zapisaną w jednym polu, dla szybkości wykorzystuję to i nie zliczam; stąd jeżeli chcę zapisać tylko punkty to dzielę na 4
-                                                                        //bo same punkty stanowią 1/4 ilości punkty + trójkąty
-                    break;
-                case 1:
-                    result = generateWarning(numberOfTriangles);
-                    break;
-            }
-
-            switch (result)
-            {
-                case MyMessageBoxResults.Yes:
-                    return false;
-                case MyMessageBoxResults.No:
-                    return true;
-            }
-            return false;
-        }
-
-        private void getNumberOfTriangles()
-        {
-            string modelIds = getSelectedModelIds();
-            string query = SqlQueries.getSumTriangles.Replace("@modelIds", modelIds);
-            this.numberOfTriangles = int.Parse(reader.readFromDB(query).getQueryData()[0][0].ToString())/1000;     //wynikiem będzie jedna pozycja, stąd [0][0]
-        }
-
-        private MyMessageBoxResults generateWarning(int numberOfPoints)
-        {
-
-            if (numberOfPoints > pointNumberWarningLevel)
-            {
-               return MyMessageBox.display("Modele do zapisania zawierają łącznie " + numberOfPoints +" punktów.\r\nTworzenie pliku może potrwać kilka minut. Czy kontynuować?", MessageBoxType.YesNo);
-            }
-            return MyMessageBoxResults.Yes;
-            
         }
 
 
@@ -328,6 +272,7 @@ namespace ModelTransfer
         {
             computationsThread.Abort();
             hideProgressItems();
+            resetParameters();
         }
 
 
@@ -443,7 +388,7 @@ namespace ModelTransfer
         private void readSelectedModelDeclarationsFromDB(string selectedModelIds)
         {
 
-            selectedModelDeclarations = new List<Model2D>();
+            //selectedModelDeclarations = new List<Model2D>();
             //string selectedModelIds = getSelectedModelIds();
             
             string queryFilter = SqlQueries.getModelsByIdFilter.Replace("@iDs", selectedModelIds);

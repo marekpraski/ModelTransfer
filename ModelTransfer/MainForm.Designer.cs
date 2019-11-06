@@ -53,8 +53,9 @@
             // 
             // modelsListView
             // 
-            this.modelsListView.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left)));
+            this.modelsListView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.modelsListView.CheckBoxes = true;
             this.modelsListView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.modelIdColHeader,
@@ -62,7 +63,7 @@
             this.modelsListView.HideSelection = false;
             this.modelsListView.Location = new System.Drawing.Point(327, 51);
             this.modelsListView.Name = "modelsListView";
-            this.modelsListView.Size = new System.Drawing.Size(241, 395);
+            this.modelsListView.Size = new System.Drawing.Size(298, 395);
             this.modelsListView.TabIndex = 0;
             this.modelsListView.UseCompatibleStateImageBehavior = false;
             this.modelsListView.View = System.Windows.Forms.View.Details;
@@ -72,12 +73,12 @@
             // modelIdColHeader
             // 
             this.modelIdColHeader.Text = "ID";
-            this.modelIdColHeader.Width = 73;
+            this.modelIdColHeader.Width = 61;
             // 
             // modelNameColHeader
             // 
             this.modelNameColHeader.Text = "Nazwa Modelu";
-            this.modelNameColHeader.Width = 157;
+            this.modelNameColHeader.Width = 230;
             // 
             // toolStrip1
             // 
@@ -89,7 +90,7 @@
             this.helpButton});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(578, 25);
+            this.toolStrip1.Size = new System.Drawing.Size(635, 25);
             this.toolStrip1.TabIndex = 1;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -151,7 +152,7 @@
             // infoLabel
             // 
             this.infoLabel.AutoSize = true;
-            this.infoLabel.Location = new System.Drawing.Point(3, 35);
+            this.infoLabel.Location = new System.Drawing.Point(3, 34);
             this.infoLabel.Name = "infoLabel";
             this.infoLabel.Size = new System.Drawing.Size(24, 13);
             this.infoLabel.TabIndex = 6;
@@ -159,15 +160,15 @@
             // 
             // progressBar1
             // 
-            this.progressBar1.Location = new System.Drawing.Point(167, 28);
+            this.progressBar1.Location = new System.Drawing.Point(130, 27);
             this.progressBar1.Name = "progressBar1";
-            this.progressBar1.Size = new System.Drawing.Size(305, 23);
+            this.progressBar1.Size = new System.Drawing.Size(330, 23);
             this.progressBar1.TabIndex = 4;
             // 
             // numberLabel
             // 
             this.numberLabel.AutoSize = true;
-            this.numberLabel.Location = new System.Drawing.Point(164, 12);
+            this.numberLabel.Location = new System.Drawing.Point(127, 11);
             this.numberLabel.Name = "numberLabel";
             this.numberLabel.Size = new System.Drawing.Size(42, 13);
             this.numberLabel.TabIndex = 5;
@@ -175,7 +176,7 @@
             // 
             // abortButton
             // 
-            this.abortButton.Location = new System.Drawing.Point(243, 57);
+            this.abortButton.Location = new System.Drawing.Point(234, 56);
             this.abortButton.Name = "abortButton";
             this.abortButton.Size = new System.Drawing.Size(123, 23);
             this.abortButton.TabIndex = 7;
@@ -192,15 +193,15 @@
             this.progressAreaPanel.Controls.Add(this.abortButton);
             this.progressAreaPanel.Controls.Add(this.progressBar1);
             this.progressAreaPanel.Controls.Add(this.numberLabel);
-            this.progressAreaPanel.Location = new System.Drawing.Point(51, 310);
+            this.progressAreaPanel.Location = new System.Drawing.Point(72, 310);
             this.progressAreaPanel.Name = "progressAreaPanel";
-            this.progressAreaPanel.Size = new System.Drawing.Size(477, 86);
+            this.progressAreaPanel.Size = new System.Drawing.Size(482, 86);
             this.progressAreaPanel.TabIndex = 8;
             // 
             // modelNameLabel
             // 
             this.modelNameLabel.AutoSize = true;
-            this.modelNameLabel.Location = new System.Drawing.Point(240, 11);
+            this.modelNameLabel.Location = new System.Drawing.Point(219, 11);
             this.modelNameLabel.Name = "modelNameLabel";
             this.modelNameLabel.Size = new System.Drawing.Size(75, 13);
             this.modelNameLabel.TabIndex = 8;
@@ -219,7 +220,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(578, 450);
+            this.ClientSize = new System.Drawing.Size(635, 450);
             this.Controls.Add(this.progressAreaPanel);
             this.Controls.Add(this.chooseModelsLabel);
             this.Controls.Add(this.directoryTreeControl1);
