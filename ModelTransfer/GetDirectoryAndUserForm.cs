@@ -19,10 +19,12 @@ namespace ModelTransfer
         private DBReader reader;
         private string selectedDirId = "";
         private string selectedUserId = "";
+        private string fileName;
 
-        public GetDirectoryAndUserForm(DBReader reader)
+        public GetDirectoryAndUserForm(DBReader reader, string fileName)
         {
             this.reader = reader;
+            this.fileName = fileName;
             InitializeComponent();
             directoryTreeControl1.directorySelectedEvent += onDirectorySelected_TreeViewNodeSelected;
             populateUserListview();
@@ -50,19 +52,28 @@ namespace ModelTransfer
             }
         }
 
-        private void Button1_Click(object sender, EventArgs e)
+        private void acceptButton_Click(object sender, EventArgs e)
         {
             if (userListView.SelectedItems.Count >0 && selectedDirId != "")
             {
-                ListViewItem item = userListView.SelectedItems[0];          //multiselect = false
-                selectedUserId = item.Name;
+                selectedUserId = userListView.SelectedItems[0].Name;          //multiselect jest ustawiony na false
                 onAcceptButtonClick();
                 this.Close();
                 this.Dispose();
             }
+            else if(userListView.SelectedItems.Count > 0 && selectedDirId == "")
+            {
+                if (MyMessageBox.display("Nie wybrano katalogu docelowego, będzie nim pień drzewa. Czy kontynuować?", MessageBoxType.YesNo) == MyMessageBoxResults.Yes)
+                {
+                    selectedUserId = userListView.SelectedItems[0].Name;          //multiselect jest ustawiony na false
+                    onAcceptButtonClick();
+                    this.Close();
+                    this.Dispose();
+                }
+            }
             else
             {
-                MyMessageBox.display("Należy wybrać katalog docelowy i użytkownika");
+                MyMessageBox.display("Należy przynajmniej wybrać użytkownika");
             }
         }
 
@@ -73,6 +84,7 @@ namespace ModelTransfer
                 MyEventArgs args = new MyEventArgs();
                 args.selectedDirectoryId = this.selectedDirId;
                 args.selectedUserId = this.selectedUserId;
+                args.fileName = this.fileName;
                 if(restoreTreeRadioButton.Checked == true)
                 {
                     args.restoreDirectoryTree = true;
@@ -83,16 +95,6 @@ namespace ModelTransfer
                 }
                 acceptButtonClickedEvent(this, args);
             }
-        }
-
-        private void restoreTreeRadioButton_CheckedChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void SaveToOneFolderRadioButton_CheckedChanged(object sender, EventArgs e)
-        {
-
         }
     }
 }

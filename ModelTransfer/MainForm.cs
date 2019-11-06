@@ -29,15 +29,13 @@ namespace ModelTransfer
                                              //dla DEBUGA ustawiony jest w metodzie ReadAllData
      
 
-        private DBReader reader;
-        private DBWriter writer;
+        private DBReader dbReader;
+        private DBWriter dbWriter;
         private DBConnector dbConnector;
         private SqlConnection dbConnection;
 
         private bool userClicked = false;
         private bool getModelsFromDirectories = false;           //true jeżeli istnieje gałąź w drzewie katalogów, która ma zaznaczony checkbox
-
-        private string[] modelSaveOptions = { "same punkty", "pełne modele" };
 
 
         private List<Model2D> selectedModelDeclarations = new List<Model2D>();       //modele wybrane przez użytkownika do zapisania w pliku
@@ -48,14 +46,14 @@ namespace ModelTransfer
 
         private int saveModelOption = 0;        //ustawiany po naciśnięciu przycisku zapisu do pliku na podstawie wyboru opcji w kombo
 
-        private string fileNameToReadFrom;               //plik .bin z modelami wybrany przez użytkownika
 
         private bool directoriesChecked = false;        //aktualizowana przez zdarzenie zafajkowania checkboxa w drzewie katalogów; 
                                                         //powoduje zatrzymanie wypełniania okna listy modeli po zaznaczeniu katalogu
                                                         //jeżeli nie nałożę tej blokady, występuje konflikt pomiędzy wątkiem wczytującym modele w celu zapisania do pliku a wątkiem wypełniającym okno modeli
-                                                        //co wywala błąd BDReadera (połączenie otwarte)
+                                                        //co wywala błąd DBReadera (połączenie otwarte)
 
 
+        private string[] modelSaveOptions = { "same punkty", "pełne modele" };      //opcje kombo
 
         #endregion
 
@@ -94,7 +92,7 @@ namespace ModelTransfer
 
                 directoryTreeControl1.turnTreeviewCheckboxesOn();
                 directoryTreeControl1.showUncheckAllCheckboxesLabel();
-                directoryTreeControl1.setUpThisForm(reader);
+                directoryTreeControl1.setUpThisForm(dbReader);
             }
         }
 
@@ -103,7 +101,6 @@ namespace ModelTransfer
         {
             modelIdsAfterRestoreDict.Clear();
             selectedModelDeclarations.Clear();
-            this.fileNameToReadFrom = null;
         }
 
 
@@ -125,7 +122,7 @@ namespace ModelTransfer
             if (dbConnector.validateConfigFile(currentPath))
             {
                 dbConnection = dbConnector.getDBConnection(ConnectionSources.serverNameInFile, ConnectionTypes.sqlAuthorisation);
-                reader = new DBReader(dbConnection);
+                dbReader = new DBReader(dbConnection);
                 return true;
             }
             return false;
@@ -191,8 +188,8 @@ namespace ModelTransfer
         //zatwierdzenie wyboru plików w eksploratorze
         private void OpenFileDialog1_FileOk(object sender, CancelEventArgs e)
         {
-            this.fileNameToReadFrom = openFileDialog1.FileName;                                               //do przerobienia, przekazywać nazwę pliku jako argument
-            GetDirectoryAndUserForm getDirectoryAndUser = new GetDirectoryAndUserForm(reader);
+            string fileName = openFileDialog1.FileName;
+            GetDirectoryAndUserForm getDirectoryAndUser = new GetDirectoryAndUserForm(dbReader, fileName);
             getDirectoryAndUser.acceptButtonClickedEvent += onGetUserAndDirectory_ButtonClick;
             getDirectoryAndUser.ShowDialog();
         }
@@ -357,7 +354,7 @@ namespace ModelTransfer
         private QueryData readModelsFromDB(string queryFilter = "")
         {
             string query = SqlQueries.getModels + queryFilter;
-            return reader.readFromDB(query);
+            return dbReader.readFromDB(query);
         }
 
 
@@ -446,7 +443,7 @@ namespace ModelTransfer
                 foreach(string dirId in directoryTreeControl1.checkedDirectories.Keys)
                 {
                     directoryTreeControl1.checkedDirectories.TryGetValue(dirId, out modelDir);
-                    List<object> modelIdsInDirList = reader.readFromDB(SqlQueries.getModels + SqlQueries.getModelsByDirectoryFilter + modelDir.id).getColumnDataAsList(SqlQueries.getModels_idModelIndex);
+                    List<object> modelIdsInDirList = dbReader.readFromDB(SqlQueries.getModels + SqlQueries.getModelsByDirectoryFilter + modelDir.id).getColumnDataAsList(SqlQueries.getModels_idModelIndex);
                     foreach(object modelId in modelIdsInDirList)
                     {
                         modelIds += modelId.ToString() + ",";
@@ -479,7 +476,7 @@ namespace ModelTransfer
                 query = SqlQueries.getPowierzchnieFull + SqlQueries.getPowierzchnie_byIdModelFilter + model.idModel;
             }
 
-            QueryData powierzchnieData = reader.readFromDB(query);
+            QueryData powierzchnieData = dbReader.readFromDB(query);
             List<string> paramTypes = powierzchnieData.getDataTypes();
 
             for(int i=0; i < powierzchnieData.getDataRowsNumber(); i++)
@@ -497,7 +494,7 @@ namespace ModelTransfer
                 pow.powierzchniaData = powierzchnieData.getQueryData()[i];
                 pow.columnHeaders = powierzchnieData.getHeaders();
                 pow.columnDataTypes = powierzchnieData.getDataTypes();
-                pow.powDataTable = reader.readFromDBToDataTable(SqlQueries.getPowierzchnieNoBlob + SqlQueries.getPowierzchnie_byIdPowFilter + pow.idPow);
+                pow.powDataTable = dbReader.readFromDBToDataTable(SqlQueries.getPowierzchnieNoBlob + SqlQueries.getPowierzchnie_byIdPowFilter + pow.idPow);
                 readPowierzchniaDataFromDB(pow);
                 model.addPowierzchnia(pow);
             }
@@ -509,25 +506,25 @@ namespace ModelTransfer
 
             ModelPunkty points = new ModelPunkty();
             query = SqlQueries.getPoints + pow.idPow;
-            points.pointData = reader.readFromDBToDataTable(query);
+            points.pointData = dbReader.readFromDBToDataTable(query);
             pow.points = points;
 
             if (saveModelOption == 1)           //tj pełne modele, tylko wtedy wczytuję trójkąty
             {
                 ModelTriangles triangles = new ModelTriangles();
                 query = SqlQueries.getTriangles + pow.idPow;
-                triangles.triangleData = reader.readFromDBToDataTable(query);
+                triangles.triangleData = dbReader.readFromDBToDataTable(query);
                 pow.triangles = triangles;                
             }
 
             ModelLinie breaklines = new ModelLinie();
             query = SqlQueries.getBreaklines + pow.idPow;
-            breaklines.breaklineData = reader.readFromDBToDataTable(query);
+            breaklines.breaklineData = dbReader.readFromDBToDataTable(query);
             pow.breaklines = breaklines;
 
             ModelGrid grids = new ModelGrid();
             query = SqlQueries.getGrids + pow.idPow;
-            grids.gridData = reader.readFromDBToDataTable(query);
+            grids.gridData = dbReader.readFromDBToDataTable(query);
             pow.grids = grids;
 
         }
@@ -671,74 +668,76 @@ namespace ModelTransfer
         //metoda uruchamiana w osobnym wątku
         private void writeModelsFromFileToDB(MyEventArgs args)
         {
-            FileManipulator fm = new FileManipulator();
-
-            if (fm.assertFileExists(this.fileNameToReadFrom))
+            int streamPosition = 0;
+            int dataPacketNumber = 0;
+            int totalNumberOfPackets = 0;                   //do paska postępu
+            ModelBundle modelDataBundle = new ModelBundle();
+            try
             {
-                int streamPosition = 0;
-                int dataPacketNumber = 0;
-                int totalNumberOfPackets = 0;                   //do paska postępu
-                ModelBundle modelDataBundle = new ModelBundle();
-                try
-                {
-                    do {
-                        //deserialize
-                        using (FileStream stream = new FileStream(this.fileNameToReadFrom, FileMode.Open))
+                do {
+                    //deserialize
+                    using (FileStream stream = new FileStream(args.fileName, FileMode.Open))
+                    {
+
+                        int dataPacketLength = 0;
+                        byte[] buffer;
+                        using (BinaryReader bReader = new BinaryReader(stream))
                         {
+                            stream.Position = streamPosition;
+                            dataPacketLength = bReader.ReadInt32();        //najpierw wpis 4 bajty określa długość paczki, która po nim następuje
+                            buffer = new byte[dataPacketLength];
+                            bReader.Read(buffer, 0, dataPacketLength);
+                        }
+                        MemoryStream compressedStream = new MemoryStream(buffer);
+                        MemoryStream decompressedStream = new MemoryStream();
 
-                            int dataPacketLength = 0;
-                            byte[] buffer;
-                            using (BinaryReader bReader = new BinaryReader(stream))
-                            {
-                                stream.Position = streamPosition;
-                                dataPacketLength = bReader.ReadInt32();        //najpierw wpis 4 bajty określa długość paczki, która po nim następuje
-                                buffer = new byte[dataPacketLength];
-                                bReader.Read(buffer, 0, dataPacketLength);
-                            }
-                            MemoryStream compressedStream = new MemoryStream(buffer);
-                            MemoryStream decompressedStream = new MemoryStream();
+                        using (GZipStream gzipStream = new GZipStream(compressedStream, CompressionMode.Decompress))
+                        {
+                            gzipStream.CopyTo(decompressedStream);
+                        }
+                        decompressedStream.Position = 0;
+                        BinaryFormatter bformatter = new BinaryFormatter();
+                        modelDataBundle = (ModelBundle)bformatter.Deserialize(decompressedStream);
 
-                            using (GZipStream gzipStream = new GZipStream(compressedStream, CompressionMode.Decompress))
+                        if (dataPacketNumber == 0)
+                        {
+                            totalNumberOfPackets = modelDataBundle.models.Count;
+                            if (modelDataBundle.checkedDirectories.Count == 0 && args.selectedDirectoryId == "")
                             {
-                                gzipStream.CopyTo(decompressedStream);
-                            }
-                            decompressedStream.Position = 0;
-                            BinaryFormatter bformatter = new BinaryFormatter();
-                            modelDataBundle = (ModelBundle)bformatter.Deserialize(decompressedStream);
-
-                            if (dataPacketNumber == 0)
-                            {
-                                totalNumberOfPackets = modelDataBundle.models.Count;
-                                writeModelDeclarationsToDB(args, modelDataBundle);
+                                MyMessageBox.display("Nie można odtworzyć modeli gdyż nie wybrano katalogu docelowego \r\na modele w pliku źródłowym wczytane zostały bez katalogu.\r\nSpróbuj wczytać ponownie wybierając katalog docelowy", MessageBoxType.Error);
+                                break;
                             }
                             else
                             {
-                                showProgress(dataPacketNumber, totalNumberOfPackets, modelDataBundle.models[0].nazwaModel.ToString());       //pasek postępu
-                                writePowierzchniaToDB(modelDataBundle);
+                                writeModelDeclarationsToDB(args, modelDataBundle);
                             }
-                            compressedStream.Close();
-                            decompressedStream.Close();
-                            streamPosition += dataPacketLength + 4;     //tj. przesuwam o nagłówek (int czyli 4 bajty) i długość właśnie przeczytanego pakietu
-
-                            dataPacketNumber++;
-
                         }
-                    }
-                    while (dataPacketNumber <= totalNumberOfPackets);
+                        else
+                        {
+                            showProgress(dataPacketNumber, totalNumberOfPackets, modelDataBundle.models[0].nazwaModel.ToString());       //pasek postępu
+                            writePowierzchniaToDB(modelDataBundle);
+                        }
+                        compressedStream.Close();
+                        decompressedStream.Close();
+                        streamPosition += dataPacketLength + 4;     //tj. przesuwam o nagłówek (int czyli 4 bajty) i długość właśnie przeczytanego pakietu
 
-                    MyMessageBox.displayAndClose("Modele wczytane", 1);
-                    hideProgressItems();            //delegat
-                    refreshDirectoryTree();      //delegat          
+                        dataPacketNumber++;
+                    }
                 }
-                catch (ArgumentException ex)
+                while (dataPacketNumber <= totalNumberOfPackets);
+
+                if (dataPacketNumber == totalNumberOfPackets)       //komunikat o sukcesie tylko wtedy, gdy cała pętla przeszła
                 {
-                    MyMessageBox.display(ex.Message, MessageBoxType.Error);
-                } 
+                    MyMessageBox.displayAndClose("Modele wczytane", 1);
+                }
+
+                hideProgressItems();            //delegat
+                refreshDirectoryTree();      //delegat          
             }
-            else
+            catch (ArgumentException ex)
             {
-                MyMessageBox.display("Nie można było odczytać modeli z pliku źródłowego", MessageBoxType.Error);
-            }
+                MyMessageBox.display(ex.Message, MessageBoxType.Error);
+            } 
         }
 
 
@@ -752,41 +751,38 @@ namespace ModelTransfer
             else
             {
                 directoryTreeControl1.resetThisForm();
-                directoryTreeControl1.setUpThisForm(reader);
+                directoryTreeControl1.setUpThisForm(dbReader);
             }
         }
-
 
 
 
         private void writeModelDeclarationsToDB(MyEventArgs args, ModelBundle modelDeclarationsFromFileBundle)
         {
             List<Model2D> models = modelDeclarationsFromFileBundle.models;
-
             Dictionary<string, ModelDirectory> checkedDirectories = modelDeclarationsFromFileBundle.checkedDirectories;
 
-            writer = new DBWriter(dbConnection);
-            DBValueTypeConverter converter = new DBValueTypeConverter();
             int maxModelIdInDB = 0;
-
             string newDirectoryId = "";
             string newIdWlasciciel = args.selectedUserId;
-
             bool restoreDirectoryTree = args.restoreDirectoryTree;
 
             string newCzyArch = "0";        //wczytywane modele nie będą archiwalne
             string newIdUzytk = "null";     //wczytywane modele nie będą oznaczone jako wczytane do pamięci
+
+            dbWriter = new DBWriter(dbConnection);
+            DBValueTypeConverter converter = new DBValueTypeConverter();
 
             if (restoreDirectoryTree && checkedDirectories.Count>0)
             {
                 writeDirectoryTreeToDB(checkedDirectories, args.selectedDirectoryId);
             }
 
-            //po kolei wpisuję deklaracje wszystkich modeli, po jednym, do tabeli DefModel2D
-            for (int i = 0; i < models.Count; i++)
-            {
-                Model2D model = models[i];
 
+            //po kolei wpisuję deklaracje wszystkich modeli, po jednym, do tabeli DefModel2D
+            int loopNumber = 0;
+            foreach (Model2D model in models)
+            {
                 string nazwaModel = converter.getConvertedValue(model.nazwaModel, model.nazwaModel_dataType);
                 string opisModel = converter.getConvertedValue(model.opisModel, model.opisModel_dataType);
                 string dataModel = converter.getConvertedValue(model.dataModel, model.dataModel_dataType);
@@ -801,9 +797,9 @@ namespace ModelTransfer
                 }
 
                 string query = SqlQueries.insertModel.Replace("@nazwaModel", nazwaModel).Replace("@opisModel", opisModel).Replace("@dataModel", dataModel).Replace("@idUzytk", newIdUzytk).Replace("@czyArch", newCzyArch).Replace("@directoryId", newDirectoryId).Replace("@idWlasciciel", newIdWlasciciel);
-                writer.writeToDB(query);
+                dbWriter.writeToDB(query);
 
-                if (i == 0)         //wpis modelu robię przez insert, baza danych automatycznie nadaje mu ID, które teraz odczytuję
+                if (loopNumber == 0)         //wpis modelu robię przez insert, baza danych automatycznie nadaje mu ID, które teraz odczytuję
                 {
                     maxModelIdInDB = getMaxModelIdFromDB();
                 }
@@ -815,8 +811,8 @@ namespace ModelTransfer
                 //w każdym modelu w powierzchniach zmieniam Id modelu na nowy, w nowej bazie danych
                 model.IdModelAfterRestore = maxModelIdInDB;
                 modelIdsAfterRestoreDict.Add(model.idModel, model.IdModelAfterRestore);
+                loopNumber++;
             }
-
         }
 
 
@@ -827,11 +823,13 @@ namespace ModelTransfer
             int maxDirectoryIdInDB = 0;
             int i = 0;
             string query = "";
+            if (selectedRootDirId == "") selectedRootDirId = "null";      //gdy użytkownik nie wybierze folderu docelowego, przypinam gałąź do pnia
+
             foreach (string dirId in checkedDirectories.Keys)
             {
                 checkedDirectories.TryGetValue(dirId, out dir);
                 query = SqlQueries.insertDirectory.Replace("@directoryName", dir.name);
-                writer.writeToDB(query);
+                dbWriter.writeToDB(query);
 
                 if (i == 0)         //wpis robię przez insert, baza danych automatycznie nadaje kolejne ID, które teraz odczytuję
                 {
@@ -845,9 +843,8 @@ namespace ModelTransfer
                 i++;
             }
 
-            //id parenta każdego katalogu aktualizuję dopiero wtedy  gdy już dodam wszystkie katalogi do bazy i mają one przypisane nowe id
-
-            
+            // aktualizuję id parenta każdego katalogu - dopiero teraz,  gdy już dodałem wszystkie katalogi do bazy i mają one przypisane nowe id
+            //na tym etapie każdy katalog ma parenta null
             foreach(string dirId in checkedDirectories.Keys)
             {
                 checkedDirectories.TryGetValue(dirId, out dir);
@@ -870,7 +867,7 @@ namespace ModelTransfer
                         //jeżeli parent Id był null, tzn gałąź została odcięta od pnia, to podpinam ten katalog pod wybrany przez użytkownika
                     query = SqlQueries.updateDirectoryParentId.Replace("@newParentId", selectedRootDirId) + dir.newId;
                 }
-                writer.writeToDB(query);
+                dbWriter.writeToDB(query);
             }
         }
 
@@ -878,7 +875,7 @@ namespace ModelTransfer
         private int getMaxDirectoryIdFromDB()
         {
             string query = SqlQueries.getMaxDirectoryId;
-            QueryData res = reader.readFromDB(query);
+            QueryData res = dbReader.readFromDB(query);
             return int.Parse(res.getQueryData()[0][0].ToString());
         }
 
@@ -896,7 +893,7 @@ namespace ModelTransfer
             {
                 ModelPowierzchnia pow = model.powierzchnieList[i];
 
-                writer.writeBulkDataToDB(pow.powDataTable, tableName);
+                dbWriter.writeBulkDataToDB(pow.powDataTable, tableName);
 
                 if (i==0)       //analogicznie jak w przypadku wpisywania deklaracji modeli, po dodaniu pierwszej powierzchni odczytuję jej ID z bazy
                 {
@@ -919,7 +916,7 @@ namespace ModelTransfer
         private int getMaxModelIdFromDB()
         {
             string query = SqlQueries.getMaxModelId;
-            QueryData res = reader.readFromDB(query);
+            QueryData res = dbReader.readFromDB(query);
             return int.Parse(res.getQueryData()[0][0].ToString());
         }
 
@@ -933,7 +930,7 @@ namespace ModelTransfer
             ModelPunkty points = pow.points;
             if (points.setNewIdPow(newIdPow))
             {
-                writer.writeBulkDataToDB(points.pointData, tableName);
+                dbWriter.writeBulkDataToDB(points.pointData, tableName);
             }
 
             tableName = dbConnector.getTableNameFromQuery(SqlQueries.getTriangles);
@@ -942,7 +939,7 @@ namespace ModelTransfer
             {
                 if (triangles.setNewIdPow(newIdPow))
                 {
-                    writer.writeBulkDataToDB(triangles.triangleData, tableName);
+                    dbWriter.writeBulkDataToDB(triangles.triangleData, tableName);
                 }
             }
 
@@ -950,14 +947,14 @@ namespace ModelTransfer
             ModelGrid grids = pow.grids;
             if (grids.setNewIdPow(newIdPow))
             {
-                writer.writeBulkDataToDB(grids.gridData, tableName);
+                dbWriter.writeBulkDataToDB(grids.gridData, tableName);
             }
 
             tableName = dbConnector.getTableNameFromQuery(SqlQueries.getBreaklines);
             ModelLinie breaklines = pow.breaklines;
             if (breaklines.setNewIdPow(newIdPow))
             {
-                writer.writeBulkDataToDB(breaklines.breaklineData, tableName);
+                dbWriter.writeBulkDataToDB(breaklines.breaklineData, tableName);
             }
 
         }
@@ -967,7 +964,7 @@ namespace ModelTransfer
         private uint getMaxPowierzchniaIdFromDB()
         {
             string query = SqlQueries.getMaxPowierzchniaId;
-            QueryData res = reader.readFromDB(query);
+            QueryData res = dbReader.readFromDB(query);
             return uint.Parse(res.getQueryData()[0][0].ToString());
         }
 

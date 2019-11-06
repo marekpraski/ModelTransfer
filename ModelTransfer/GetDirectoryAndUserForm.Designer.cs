@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             this.label2 = new System.Windows.Forms.Label();
-            this.button1 = new System.Windows.Forms.Button();
+            this.acceptButton = new System.Windows.Forms.Button();
             this.userListView = new System.Windows.Forms.ListView();
             this.directoryTreeControl1 = new ModelTransfer.DirectoryTreeControl();
             this.restoreTreeRadioButton = new System.Windows.Forms.RadioButton();
@@ -47,15 +47,15 @@
             this.label2.TabIndex = 3;
             this.label2.Text = "wybierz właściciela";
             // 
-            // button1
+            // acceptButton
             // 
-            this.button1.Location = new System.Drawing.Point(178, 363);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(75, 23);
-            this.button1.TabIndex = 4;
-            this.button1.Text = "zatwierdź";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.Button1_Click);
+            this.acceptButton.Location = new System.Drawing.Point(178, 363);
+            this.acceptButton.Name = "acceptButton";
+            this.acceptButton.Size = new System.Drawing.Size(75, 23);
+            this.acceptButton.TabIndex = 4;
+            this.acceptButton.Text = "zatwierdź";
+            this.acceptButton.UseVisualStyleBackColor = true;
+            this.acceptButton.Click += new System.EventHandler(this.acceptButton_Click);
             // 
             // userListView
             // 
@@ -86,7 +86,6 @@
             this.restoreTreeRadioButton.TabStop = true;
             this.restoreTreeRadioButton.Text = "odtwórz drzewo katalogów";
             this.restoreTreeRadioButton.UseVisualStyleBackColor = true;
-            this.restoreTreeRadioButton.CheckedChanged += new System.EventHandler(this.restoreTreeRadioButton_CheckedChanged);
             // 
             // saveToOneFolderRadioButton
             // 
@@ -97,7 +96,6 @@
             this.saveToOneFolderRadioButton.TabIndex = 8;
             this.saveToOneFolderRadioButton.Text = "zapisz do jednego katalogu";
             this.saveToOneFolderRadioButton.UseVisualStyleBackColor = true;
-            this.saveToOneFolderRadioButton.CheckedChanged += new System.EventHandler(this.SaveToOneFolderRadioButton_CheckedChanged);
             // 
             // groupBox1
             // 
@@ -117,7 +115,7 @@
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.directoryTreeControl1);
             this.Controls.Add(this.userListView);
-            this.Controls.Add(this.button1);
+            this.Controls.Add(this.acceptButton);
             this.Controls.Add(this.label2);
             this.Name = "GetDirectoryAndUserForm";
             this.Text = "Wybór katalogu i właściciela modeli";
@@ -130,7 +128,7 @@
 
         #endregion
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button acceptButton;
         private System.Windows.Forms.ListView userListView;
         private DirectoryTreeControl directoryTreeControl1;
         private System.Windows.Forms.RadioButton restoreTreeRadioButton;
