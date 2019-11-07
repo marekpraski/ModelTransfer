@@ -467,14 +467,9 @@ namespace ModelTransfer
         private void readPowierzchniaFromDB(Model2D model)
         {
             string query = "";
-            if (saveModelOption == 0)       
-            {
-                query = SqlQueries.getPowierzchnieNoBlob + SqlQueries.getPowierzchnie_byIdModelFilter + model.idModel;
-            }
-            else
-            {
-                query = SqlQueries.getPowierzchnieFull + SqlQueries.getPowierzchnie_byIdModelFilter + model.idModel;
-            }
+
+            //najpierw potrzebuję jedynie utworzyć obiekty ModelPowierzchnia, potrzebuję do tego tylko niektóre dane
+            query = SqlQueries.getPowierzchnieNoBlob + SqlQueries.getPowierzchnie_byIdModelFilter + model.idModel;
 
             QueryData powierzchnieData = dbReader.readFromDB(query);
             List<string> paramTypes = powierzchnieData.getDataTypes();
@@ -494,7 +489,16 @@ namespace ModelTransfer
                 pow.powierzchniaData = powierzchnieData.getQueryData()[i];
                 pow.columnHeaders = powierzchnieData.getHeaders();
                 pow.columnDataTypes = powierzchnieData.getDataTypes();
-                pow.powDataTable = dbReader.readFromDBToDataTable(SqlQueries.getPowierzchnieNoBlob + SqlQueries.getPowierzchnie_byIdPowFilter + pow.idPow);
+
+                //teraz w zależności od opcji czytam pełne dane powierzchni i zapisuję do DataTable
+                if (saveModelOption == 0)
+                {
+                    pow.powDataTable = dbReader.readFromDBToDataTable(SqlQueries.getPowierzchnieNoBlob + SqlQueries.getPowierzchnie_byIdPowFilter + pow.idPow);
+                }
+                else
+                {
+                    pow.powDataTable = dbReader.readFromDBToDataTable(SqlQueries.getPowierzchnieFull + SqlQueries.getPowierzchnie_byIdPowFilter + pow.idPow);
+                }
                 readPowierzchniaDataFromDB(pow);
                 model.addPowierzchnia(pow);
             }
@@ -726,7 +730,7 @@ namespace ModelTransfer
                 }
                 while (dataPacketNumber <= totalNumberOfPackets);
 
-                if (dataPacketNumber == totalNumberOfPackets)       //komunikat o sukcesie tylko wtedy, gdy cała pętla przeszła
+                if (dataPacketNumber >= totalNumberOfPackets)       //komunikat o sukcesie tylko wtedy, gdy cała pętla przeszła
                 {
                     MyMessageBox.displayAndClose("Modele wczytane", 1);
                 }

@@ -73,7 +73,7 @@ namespace ModelTransfer
             }
             else
             {
-                MyMessageBox.display("Należy przynajmniej wybrać użytkownika");
+                MyMessageBox.display("Należy wybrać użytkownika");
             }
         }
 
