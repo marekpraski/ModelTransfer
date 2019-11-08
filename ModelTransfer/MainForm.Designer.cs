@@ -47,6 +47,7 @@
             this.progressAreaPanel = new System.Windows.Forms.Panel();
             this.modelNameLabel = new System.Windows.Forms.Label();
             this.directoryTreeControl1 = new ModelTransfer.DirectoryTreeControl();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStrip1.SuspendLayout();
             this.progressAreaPanel.SuspendLayout();
             this.SuspendLayout();
@@ -83,8 +84,9 @@
             // toolStrip1
             // 
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripSaveToFileButton,
             this.saveModelOptionsCombo,
+            this.toolStripSaveToFileButton,
+            this.toolStripSeparator2,
             this.toolStripSeparator1,
             this.modelsFromFileButton,
             this.helpButton});
@@ -216,6 +218,11 @@
             this.directoryTreeControl1.Size = new System.Drawing.Size(309, 422);
             this.directoryTreeControl1.TabIndex = 2;
             // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 25);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -257,6 +264,7 @@
         private System.Windows.Forms.Button abortButton;
         private System.Windows.Forms.Panel progressAreaPanel;
         private System.Windows.Forms.Label modelNameLabel;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
     }
 }
 

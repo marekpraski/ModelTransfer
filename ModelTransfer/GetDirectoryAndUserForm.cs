@@ -59,7 +59,6 @@ namespace ModelTransfer
                 selectedUserId = userListView.SelectedItems[0].Name;          //multiselect jest ustawiony na false
                 onAcceptButtonClick();
                 this.Close();
-                this.Dispose();
             }
             else if(userListView.SelectedItems.Count > 0 && selectedDirId == "")
             {

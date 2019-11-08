@@ -28,8 +28,6 @@ namespace ModelTransfer
         {
             OnGetFileName();
             this.Close();
-            this.Dispose();
-
         }
 
         protected virtual void OnGetFileName()

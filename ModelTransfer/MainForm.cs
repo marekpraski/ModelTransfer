@@ -29,7 +29,6 @@ namespace ModelTransfer
                                              //dla DEBUGA ustawiony jest w metodzie ReadAllData
      
 
-        private DBReader dbReader;
         private DBWriter dbWriter;
         private DBConnector dbConnector;
         private SqlConnection dbConnection;
@@ -92,6 +91,7 @@ namespace ModelTransfer
 
                 directoryTreeControl1.turnTreeviewCheckboxesOn();
                 directoryTreeControl1.showUncheckAllCheckboxesLabel();
+                DBReader dbReader = new DBReader(dbConnection);
                 directoryTreeControl1.setUpThisForm(dbReader);
             }
         }
@@ -108,7 +108,7 @@ namespace ModelTransfer
 
 
 
-#region Region - start programu, utworzenie połączenia z bazą danych, utworzenie czytnika
+#region Region - start programu, utworzenie połączenia z bazą danych
 
 
         private bool establishConnection()
@@ -122,7 +122,6 @@ namespace ModelTransfer
             if (dbConnector.validateConfigFile(currentPath))
             {
                 dbConnection = dbConnector.getDBConnection(ConnectionSources.serverNameInFile, ConnectionTypes.sqlAuthorisation);
-                dbReader = new DBReader(dbConnection);
                 return true;
             }
             return false;
@@ -189,6 +188,7 @@ namespace ModelTransfer
         private void OpenFileDialog1_FileOk(object sender, CancelEventArgs e)
         {
             string fileName = openFileDialog1.FileName;
+            DBReader dbReader = new DBReader(dbConnection);
             GetDirectoryAndUserForm getDirectoryAndUser = new GetDirectoryAndUserForm(dbReader, fileName);
             getDirectoryAndUser.acceptButtonClickedEvent += onGetUserAndDirectory_ButtonClick;
             getDirectoryAndUser.ShowDialog();
@@ -268,6 +268,7 @@ namespace ModelTransfer
         private void AbortButton_Click(object sender, EventArgs e)
         {
             computationsThread.Abort();
+            if (dbConnection.State == ConnectionState.Open) dbConnection.Close();
             hideProgressItems();
             resetParameters();
         }
@@ -353,6 +354,7 @@ namespace ModelTransfer
 
         private QueryData readModelsFromDB(string queryFilter = "")
         {
+            DBReader dbReader = new DBReader(dbConnection);
             string query = SqlQueries.getModels + queryFilter;
             return dbReader.readFromDB(query);
         }
@@ -384,9 +386,6 @@ namespace ModelTransfer
         //dane z tej metody będą użyte do odtworzenia struktury, do której następnie będą iteracyjnie dopisane dane 
         private void readSelectedModelDeclarationsFromDB(string selectedModelIds)
         {
-
-            //selectedModelDeclarations = new List<Model2D>();
-            //string selectedModelIds = getSelectedModelIds();
             
             string queryFilter = SqlQueries.getModelsByIdFilter.Replace("@iDs", selectedModelIds);
 
@@ -436,6 +435,7 @@ namespace ModelTransfer
 
         private string getSelectedModelIds()
         {
+            DBReader dbReader = new DBReader(dbConnection);
             string modelIds = "";
             if (getModelsFromDirectories)
             {
@@ -467,7 +467,7 @@ namespace ModelTransfer
         private void readPowierzchniaFromDB(Model2D model)
         {
             string query = "";
-
+            DBReader dbReader = new DBReader(dbConnection);
             //najpierw potrzebuję jedynie utworzyć obiekty ModelPowierzchnia, potrzebuję do tego tylko niektóre dane
             query = SqlQueries.getPowierzchnieNoBlob + SqlQueries.getPowierzchnie_byIdModelFilter + model.idModel;
 
@@ -507,6 +507,7 @@ namespace ModelTransfer
         private void readPowierzchniaDataFromDB(ModelPowierzchnia pow)
         {
             string query = "";
+            DBReader dbReader = new DBReader(dbConnection);
 
             ModelPunkty points = new ModelPunkty();
             query = SqlQueries.getPoints + pow.idPow;
@@ -553,15 +554,15 @@ namespace ModelTransfer
             initializeFile(serializationFile);
 
             int modelsTotal = selectedModelDeclarations.Count;       //do paska postępu
-            int i = 0;
-            foreach (Model2D model in selectedModelDeclarations)
+           
+            for (int k=0; k<modelsTotal; k++)
             {
-                showProgress(i + 1, modelsTotal, model.nazwaModel.ToString());
+                Model2D model = selectedModelDeclarations[0];
+                showProgress(k + 1, modelsTotal, model.nazwaModel.ToString());
 
                 readPowierzchniaFromDB(model);
                 addModelToFile(serializationFile, model);
-                //do paska postępu
-                i++;
+                selectedModelDeclarations.Remove(model);
             }
         }
 
@@ -629,12 +630,12 @@ namespace ModelTransfer
                     using (GZipStream gzipStream = new GZipStream(compressedMemoryStream, CompressionMode.Compress))
                     {
                         originalMemoryStream.WriteTo(gzipStream);
+                        originalMemoryStream.Close();
                     }
 
                     byte[] buffer = compressedMemoryStream.ToArray();
                     int bufferSize = buffer.Length;
                     compressedMemoryStream.Close();
-                    originalMemoryStream.Close();
 
                     using (BinaryWriter binWriter = new BinaryWriter(stream))
                     {
@@ -646,7 +647,7 @@ namespace ModelTransfer
             }
             catch (OutOfMemoryException exc)
             {
-                MyMessageBox.display(exc.Message + "\r\nwriteModelsToFile");
+                MyMessageBox.display(exc.Message + "\r\nwriteModelsToFile", MessageBoxType.Error);
             }
         }
 
@@ -698,6 +699,7 @@ namespace ModelTransfer
                         using (GZipStream gzipStream = new GZipStream(compressedStream, CompressionMode.Decompress))
                         {
                             gzipStream.CopyTo(decompressedStream);
+                            compressedStream.Close();
                         }
                         decompressedStream.Position = 0;
                         BinaryFormatter bformatter = new BinaryFormatter();
@@ -720,11 +722,10 @@ namespace ModelTransfer
                         {
                             showProgress(dataPacketNumber, totalNumberOfPackets, modelDataBundle.models[0].nazwaModel.ToString());       //pasek postępu
                             writePowierzchniaToDB(modelDataBundle);
-                        }
-                        compressedStream.Close();
+                        }                        
                         decompressedStream.Close();
                         streamPosition += dataPacketLength + 4;     //tj. przesuwam o nagłówek (int czyli 4 bajty) i długość właśnie przeczytanego pakietu
-
+                        modelDataBundle.clear();
                         dataPacketNumber++;
                     }
                 }
@@ -742,6 +743,14 @@ namespace ModelTransfer
             {
                 MyMessageBox.display(ex.Message, MessageBoxType.Error);
             } 
+            catch(OutOfMemoryException exc)
+            {
+                MyMessageBox.display(exc.Message + "\r\nwriteModelsFromFileToDB", MessageBoxType.Error);
+            }
+            catch (EndOfStreamException exce)
+            {
+                MyMessageBox.display(exce.Message + "\r\nwriteModelsFromFileToDB \r\nPlik jest uszkodzony");
+            }
         }
 
 
@@ -754,6 +763,7 @@ namespace ModelTransfer
             }
             else
             {
+                DBReader dbReader = new DBReader(dbConnection);
                 directoryTreeControl1.resetThisForm();
                 directoryTreeControl1.setUpThisForm(dbReader);
             }
@@ -878,6 +888,7 @@ namespace ModelTransfer
 
         private int getMaxDirectoryIdFromDB()
         {
+            DBReader dbReader = new DBReader(dbConnection);
             string query = SqlQueries.getMaxDirectoryId;
             QueryData res = dbReader.readFromDB(query);
             return int.Parse(res.getQueryData()[0][0].ToString());
@@ -919,6 +930,7 @@ namespace ModelTransfer
 
         private int getMaxModelIdFromDB()
         {
+            DBReader dbReader = new DBReader(dbConnection);
             string query = SqlQueries.getMaxModelId;
             QueryData res = dbReader.readFromDB(query);
             return int.Parse(res.getQueryData()[0][0].ToString());
@@ -967,6 +979,7 @@ namespace ModelTransfer
 
         private uint getMaxPowierzchniaIdFromDB()
         {
+            DBReader dbReader = new DBReader(dbConnection);
             string query = SqlQueries.getMaxPowierzchniaId;
             QueryData res = dbReader.readFromDB(query);
             return uint.Parse(res.getQueryData()[0][0].ToString());

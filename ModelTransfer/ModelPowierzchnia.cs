@@ -47,6 +47,5 @@ namespace ModelTransfer
                 row[col] = newPowId;
             }
         }
-
     }
 }

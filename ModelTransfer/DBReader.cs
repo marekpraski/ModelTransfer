@@ -70,6 +70,7 @@ namespace ModelTransfer
             catch (InvalidOperationException exc)
             {
                MyMessageBox.display(exc.Message + "  \r\n DBReader - readFromDb \r\n" + log);
+                if (dbConnection.State == ConnectionState.Open) dbConnection.Close();
             }
 
             return queryData;
@@ -94,6 +95,11 @@ namespace ModelTransfer
             catch(SqlException e)
             {
                 MyMessageBox.display(e.Message + "\r\n" + dbConnection.ConnectionString, MessageBoxType.Error);
+            }
+            catch (InvalidOperationException exc)
+            {
+                MyMessageBox.display(exc.Message + "  \r\n DBReader - readFromDBToDataTable \r\n" + log);
+                if (dbConnection.State == ConnectionState.Open) dbConnection.Close();
             }
             return data;
         }

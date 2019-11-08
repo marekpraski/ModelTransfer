@@ -24,6 +24,12 @@ namespace ModelTransfer
         {
             models.Add(model);
         }
+        
+        public void clear()
+        {
+            models.Clear();
+            checkedDirectories.Clear();
+        }
 
     }
 }
