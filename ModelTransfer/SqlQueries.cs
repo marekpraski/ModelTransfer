@@ -59,6 +59,9 @@ namespace ModelTransfer
         public static string getPowierzchnieFull = "select IDPow, IDModel, NazwaSkr, NazwaPow, Promien, PoczWspY, PoczWspX, RozmOczekY, RozmOczekX, LbaOczekY, LbaOczekX, IlPkt, IlSektor, Wykladnik, PowObrys, " +
                                                "DataPowierzchni, dane_bin, dane_bin_rozmiar, dane_bin_index, dane_bin_index_rozmiar, minZ, maxZ, ileTri, ileGrd from DefPowierzchni  ";
 
+        public static string getPowierzchnieDeclaration = "select IDPow, IDModel, NazwaSkr, NazwaPow from DefPowierzchni  ";
+
+
         public static string getPowierzchnie_byIdModelFilter = " where IDModel =";
         public static string getPowierzchnie_byIdPowFilter = " where IDPow =";
 

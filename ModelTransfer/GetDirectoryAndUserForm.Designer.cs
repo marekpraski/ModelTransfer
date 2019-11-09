@@ -31,10 +31,11 @@
             this.label2 = new System.Windows.Forms.Label();
             this.acceptButton = new System.Windows.Forms.Button();
             this.userListView = new System.Windows.Forms.ListView();
-            this.directoryTreeControl1 = new ModelTransfer.DirectoryTreeControl();
             this.restoreTreeRadioButton = new System.Windows.Forms.RadioButton();
             this.saveToOneFolderRadioButton = new System.Windows.Forms.RadioButton();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.infoLabel = new System.Windows.Forms.Label();
+            this.directoryTreeControl1 = new ModelTransfer.DirectoryTreeControl();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -68,13 +69,6 @@
             this.userListView.UseCompatibleStateImageBehavior = false;
             this.userListView.View = System.Windows.Forms.View.List;
             // 
-            // directoryTreeControl1
-            // 
-            this.directoryTreeControl1.Location = new System.Drawing.Point(11, 55);
-            this.directoryTreeControl1.Name = "directoryTreeControl1";
-            this.directoryTreeControl1.Size = new System.Drawing.Size(213, 302);
-            this.directoryTreeControl1.TabIndex = 6;
-            // 
             // restoreTreeRadioButton
             // 
             this.restoreTreeRadioButton.AutoSize = true;
@@ -107,11 +101,32 @@
             this.groupBox1.TabIndex = 9;
             this.groupBox1.TabStop = false;
             // 
+            // infoLabel
+            // 
+            this.infoLabel.AutoSize = true;
+            this.infoLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.infoLabel.ForeColor = System.Drawing.Color.Blue;
+            this.infoLabel.Location = new System.Drawing.Point(327, 53);
+            this.infoLabel.Name = "infoLabel";
+            this.infoLabel.Size = new System.Drawing.Size(15, 15);
+            this.infoLabel.TabIndex = 10;
+            this.infoLabel.Text = "?";
+            this.infoLabel.MouseEnter += new System.EventHandler(this.InfoLabel_MouseEnter);
+            // 
+            // directoryTreeControl1
+            // 
+            this.directoryTreeControl1.Location = new System.Drawing.Point(11, 55);
+            this.directoryTreeControl1.Name = "directoryTreeControl1";
+            this.directoryTreeControl1.Size = new System.Drawing.Size(213, 302);
+            this.directoryTreeControl1.TabIndex = 6;
+            this.directoryTreeControl1.toolTipText = null;
+            // 
             // GetDirectoryAndUserForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(432, 392);
+            this.Controls.Add(this.infoLabel);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.directoryTreeControl1);
             this.Controls.Add(this.userListView);
@@ -134,5 +149,6 @@
         private System.Windows.Forms.RadioButton restoreTreeRadioButton;
         private System.Windows.Forms.RadioButton saveToOneFolderRadioButton;
         private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.Label infoLabel;
     }
 }

@@ -91,6 +91,7 @@ namespace ModelTransfer
 
                 directoryTreeControl1.turnTreeviewCheckboxesOn();
                 directoryTreeControl1.showUncheckAllCheckboxesLabel();
+                directoryTreeControl1.toolTipText = "zaznacz nazwę by wybrać pojedyncze modele; \r\nzaznacz checkbox przy nazwie by wybrać cały katalog;\r\nzaznaczenie checkboxa deaktywuje okno wyboru modeli";
                 DBReader dbReader = new DBReader(dbConnection);
                 directoryTreeControl1.setUpThisForm(dbReader);
             }
@@ -466,10 +467,9 @@ namespace ModelTransfer
 
         private void readPowierzchniaFromDB(Model2D model)
         {
-            string query = "";
             DBReader dbReader = new DBReader(dbConnection);
             //najpierw potrzebuję jedynie utworzyć obiekty ModelPowierzchnia, potrzebuję do tego tylko niektóre dane
-            query = SqlQueries.getPowierzchnieNoBlob + SqlQueries.getPowierzchnie_byIdModelFilter + model.idModel;
+            string query = SqlQueries.getPowierzchnieDeclaration + SqlQueries.getPowierzchnie_byIdModelFilter + model.idModel;
 
             QueryData powierzchnieData = dbReader.readFromDB(query);
             List<string> paramTypes = powierzchnieData.getDataTypes();

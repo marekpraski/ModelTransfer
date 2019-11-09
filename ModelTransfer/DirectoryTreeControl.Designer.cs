@@ -31,6 +31,7 @@
             this.treeView1 = new System.Windows.Forms.TreeView();
             this.label1 = new System.Windows.Forms.Label();
             this.uncheckAllLabel = new System.Windows.Forms.Label();
+            this.infoLabel = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // treeView1
@@ -68,10 +69,24 @@
             this.uncheckAllLabel.Visible = false;
             this.uncheckAllLabel.Click += new System.EventHandler(this.UncheckAllLabel_Click);
             // 
+            // infoLabel
+            // 
+            this.infoLabel.AutoSize = true;
+            this.infoLabel.Cursor = System.Windows.Forms.Cursors.Help;
+            this.infoLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.infoLabel.ForeColor = System.Drawing.Color.Blue;
+            this.infoLabel.Location = new System.Drawing.Point(85, 2);
+            this.infoLabel.Name = "infoLabel";
+            this.infoLabel.Size = new System.Drawing.Size(15, 15);
+            this.infoLabel.TabIndex = 5;
+            this.infoLabel.Text = "?";
+            this.infoLabel.MouseEnter += new System.EventHandler(this.InfoLabel_MouseEnter);
+            // 
             // DirectoryTreeControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.infoLabel);
             this.Controls.Add(this.uncheckAllLabel);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.treeView1);
@@ -87,5 +102,6 @@
         private System.Windows.Forms.TreeView treeView1;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label uncheckAllLabel;
+        private System.Windows.Forms.Label infoLabel;
     }
 }

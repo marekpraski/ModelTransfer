@@ -26,6 +26,8 @@ namespace ModelTransfer
         public delegate void DirectoryCheckedEventHandler(object sender, MyEventArgs args);
         public event DirectoryCheckedEventHandler directoryCheckedEvent;
 
+        public string toolTipText { get; set; }
+
 
         public DirectoryTreeControl()
         {
@@ -71,9 +73,10 @@ namespace ModelTransfer
         }
 
 
-        private void uncheckAllButton_Click(object sender, EventArgs e)
-        {
 
+        private void InfoLabel_MouseEnter(object sender, EventArgs e)
+        {
+            displayTooltip();
         }
 
 
@@ -106,6 +109,8 @@ namespace ModelTransfer
             }
             onDirectoryChecked();
         }
+
+
 
         #endregion
 
@@ -164,14 +169,10 @@ namespace ModelTransfer
         }
 
 
-        private List<string> getCheckedDirectories()
-        {
-            return null;
-        }
-
 
 
         #endregion
+
 
         private void getDirectories(DBReader reader)
         {
@@ -259,5 +260,20 @@ namespace ModelTransfer
             return dirNode;
         }
 
+        private void displayTooltip()
+        {
+            // Create the ToolTip and associate with the Form container.
+            ToolTip toolTip1 = new ToolTip();
+
+            // Set up the delays for the ToolTip.
+            toolTip1.AutoPopDelay = 10000;
+            toolTip1.InitialDelay = 10;
+            toolTip1.ReshowDelay = 10;
+            // Force the ToolTip text to be displayed whether or not the form is active.
+            toolTip1.ShowAlways = true;
+
+            // Set up the ToolTip text
+            toolTip1.SetToolTip(infoLabel, toolTipText);
+        }
     }
 }
