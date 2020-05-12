@@ -102,6 +102,7 @@ namespace ModelTransfer
         {
             modelIdsAfterRestoreDict.Clear();
             selectedModelDeclarations.Clear();
+            if (dbConnection.State == ConnectionState.Open) dbConnection.Close();
         }
 
 

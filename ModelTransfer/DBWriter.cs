@@ -40,7 +40,6 @@ namespace ModelTransfer
 
                         dbConnection.Open();
                         adapter.InsertCommand.ExecuteNonQuery();
-                        dbConnection.Close();
 
                         command.Dispose();
                     }
@@ -51,6 +50,9 @@ namespace ModelTransfer
                     catch (InvalidOperationException ex)
                     {
                         MyMessageBox.display(ex.Message + ex.StackTrace, MessageBoxType.Error);
+                    }
+                    finally
+                    {
                         if (dbConnection.State == ConnectionState.Open) dbConnection.Close();
                     }
                 }
@@ -73,21 +75,21 @@ namespace ModelTransfer
 
             try
             {
-                bulkCopy.WriteToServer(data); //System.InvalidOperationException: „Podana wartość typu Object[] ze źródła danych nie może zostać przekonwertowana na typ varchar określonej kolumny docelowej.”
-                                              //InvalidCastException: Obiekt musi implementować element IConvertible.
+                bulkCopy.WriteToServer(data); 
 
-                //System.InvalidOperationException: „Podany element ColumnMapping nie jest zgodny z żadną kolumną w lokalizacji źródłowej lub docelowej.”
             }
             catch (System.InvalidOperationException ex)
             {
-                MyMessageBox.display(ex.Message + "\r\n DBWriter, writeBulkDataToDB");
-                if (dbConnection.State == ConnectionState.Open) dbConnection.Close();
+                MyMessageBox.display(ex.Message + ex.StackTrace + "\r\n DBWriter, writeBulkDataToDB");
             }
             catch (Exception exc)
             {
-                MyMessageBox.display(exc.Message + "\r\n DBWriter, writeBulkDataToDB");
+                MyMessageBox.display(exc.Message + exc.StackTrace + "\r\n DBWriter, writeBulkDataToDB");
             }
-            dbConnection.Close();
+            finally
+            {
+                if (dbConnection.State == ConnectionState.Open) dbConnection.Close();
+            }
 
 
         }

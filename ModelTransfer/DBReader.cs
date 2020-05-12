@@ -12,7 +12,6 @@ namespace ModelTransfer
     {
         private SqlConnection dbConnection;
         private QueryData queryData;
-        private string log = "";
 
         public DBReader(SqlConnection dbConnection)
         {
@@ -22,54 +21,46 @@ namespace ModelTransfer
 
         public QueryData readFromDB(string sqlQuery)
         {
-            log += "\r\n1  " +sqlQuery;         //dodałem zapisywanie loga dla celów debugowania
             queryData = new QueryData();
 
             try
             {
-                log += "\r\n2";
                 SqlCommand command = new SqlCommand(sqlQuery, dbConnection);
                 command.CommandTimeout = ProgramSettings.commandTimeout;
                 dbConnection.Open();
 
-                log += "\r\n3";
-                SqlDataReader sqlReader = command.ExecuteReader();
-
-                int numberOfColumns = sqlReader.FieldCount;
-
-                log += "\r\n4";
-
-                while (sqlReader.Read())
+                using (SqlDataReader sqlReader = command.ExecuteReader())
                 {
-                    object[] rowData = new object[numberOfColumns];
-                    for (int i = 0; i < numberOfColumns; i++)
+                    int numberOfColumns = sqlReader.FieldCount;
+
+                    while (sqlReader.Read())
                     {
-                        rowData[i] = sqlReader.GetValue(i).ToString();
+                        object[] rowData = new object[numberOfColumns];
+                        for (int i = 0; i < numberOfColumns; i++)
+                        {
+                            rowData[i] = sqlReader.GetValue(i).ToString();
+                        }
+                        queryData.addQueryData(rowData);
                     }
-                    queryData.addQueryData(rowData);
-                }
-                
-                for (int i = 0; i < sqlReader.FieldCount; i++)
-                {
-                    queryData.addHeader(sqlReader.GetName(i));
-                    queryData.addDataType(sqlReader.GetDataTypeName(i));
-                }
-                log += "\r\n5";
 
-                sqlReader.Close();
-                log += "\r\n6";
+                    for (int i = 0; i < sqlReader.FieldCount; i++)
+                    {
+                        queryData.addHeader(sqlReader.GetName(i));
+                        queryData.addDataType(sqlReader.GetDataTypeName(i));
+                    }
+                }
                 command.Dispose();
-                log += "\r\n7";
-                dbConnection.Close();
-                log += "\r\n8";
             }
             catch (System.Data.SqlClient.SqlException e)
             {
-                MyMessageBox.display(e.Message + "\r\n" + dbConnection.ConnectionString, MessageBoxType.Error);
+                MyMessageBox.display(e.Message + e.StackTrace + "\r\n" + dbConnection.ConnectionString, MessageBoxType.Error);
             }
             catch (InvalidOperationException exc)
             {
-               MyMessageBox.display(exc.Message + "  \r\n DBReader - readFromDb \r\n" + log);
+               MyMessageBox.display(exc.Message + exc.StackTrace + "  \r\n DBReader - readFromDb \r\n");
+            }
+            finally
+            {
                 if (dbConnection.State == ConnectionState.Open) dbConnection.Close();
             }
 
@@ -91,15 +82,17 @@ namespace ModelTransfer
 
                 da.Dispose();
                 sqlCommand.Dispose();
-                dbConnection.Close();
             }
             catch(SqlException e)
             {
-                MyMessageBox.display(e.Message + "\r\n" + dbConnection.ConnectionString, MessageBoxType.Error);
+                MyMessageBox.display(e.Message + e.StackTrace + "\r\n" + dbConnection.ConnectionString, MessageBoxType.Error);
             }
             catch (InvalidOperationException exc)
             {
-                MyMessageBox.display(exc.Message + "  \r\n DBReader - readFromDBToDataTable \r\n" + log);
+                MyMessageBox.display(exc.Message + exc.StackTrace + "  \r\n DBReader - readFromDBToDataTable \r\n");
+            }
+            finally
+            {
                 if (dbConnection.State == ConnectionState.Open) dbConnection.Close();
             }
             return data;
