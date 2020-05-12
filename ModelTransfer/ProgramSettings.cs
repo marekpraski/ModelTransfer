@@ -17,8 +17,8 @@ namespace ModelTransfer
         public static string databaseNameDelimiter = "db_name";
 
         public static int connectionTimeout = 10;      //sprawdzanie loginu i hasła nie powinno trwać dłużej niż 10 sekund
-        public static int commandTimeout = 180;         //czas czynności na bazie podczas jednego połączenia
-        public static int bulkCopyTimeout = 240;        //czas na ładowanie do bazy metodą bulkCopy, ładuje hurtowo dużo danych
+        public static int commandTimeout = 600;         //czas czynności na bazie podczas jednego połączenia
+        public static int bulkCopyTimeout = 600;        //czas na ładowanie do bazy metodą bulkCopy, ładuje hurtowo dużo danych
 
         //ścieżka względna z której znajdowany jest plik konfiguracyjny, np @"/../Conf/". Gdy jest "" plik konfiguracyjny musi być w katalogu z którego uruchomiony jest program
         public static string configFilePath = "";

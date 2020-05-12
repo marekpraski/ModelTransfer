@@ -46,11 +46,11 @@ namespace ModelTransfer
                     }
                     catch (System.Data.SqlClient.SqlException e)
                     {
-                        MyMessageBox.display(e.Message, MessageBoxType.Error);
+                        MyMessageBox.display(e.Message + e.StackTrace, MessageBoxType.Error);
                     }
                     catch (InvalidOperationException ex)
                     {
-                        MyMessageBox.display(ex.Message, MessageBoxType.Error);
+                        MyMessageBox.display(ex.Message + ex.StackTrace, MessageBoxType.Error);
                         if (dbConnection.State == ConnectionState.Open) dbConnection.Close();
                     }
                 }

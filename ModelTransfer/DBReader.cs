@@ -83,6 +83,7 @@ namespace ModelTransfer
             try
             {
                 SqlCommand sqlCommand = new SqlCommand(sqlQuery, dbConnection);
+                sqlCommand.CommandTimeout = ProgramSettings.commandTimeout;
                 dbConnection.Open();
                 SqlDataAdapter da = new SqlDataAdapter(sqlCommand);
 
