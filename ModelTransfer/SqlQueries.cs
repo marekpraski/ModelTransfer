@@ -53,11 +53,11 @@ namespace ModelTransfer
         //powierzchnie
         //
 
-        public static string getPowierzchnieNoBlob = "select IDPow, IDModel, NazwaSkr, NazwaPow, Promien, PoczWspY, PoczWspX, RozmOczekY, RozmOczekX, LbaOczekY, LbaOczekX, IlPkt, IlSektor, Wykladnik, null as PowObrys, " +
-                                                "DataPowierzchni, null as dane_bin, dane_bin_rozmiar, null as dane_bin_index, dane_bin_index_rozmiar, minZ, maxZ, ileTri, ileGrd from DefPowierzchni  ";
+        public static string getPowierzchnieNoBlob = @"IDPow, IDModel, NazwaSkr, NazwaPow, Promien, PoczWspY, PoczWspX, RozmOczekY, RozmOczekX, LbaOczekY, LbaOczekX, IlPkt, IlSektor, Wykladnik, PowObrys, 
+                                               DataPowierzchni, minZ, maxZ, punkty_bin, ilePkt, linie_bin, ileLinii, minX, maxX, minY, maxY from DefPowierzchni  ";
 
-        public static string getPowierzchnieFull = "select IDPow, IDModel, NazwaSkr, NazwaPow, Promien, PoczWspY, PoczWspX, RozmOczekY, RozmOczekX, LbaOczekY, LbaOczekX, IlPkt, IlSektor, Wykladnik, PowObrys, " +
-                                               "DataPowierzchni, dane_bin, dane_bin_rozmiar, dane_bin_index, dane_bin_index_rozmiar, minZ, maxZ, ileTri, ileGrd from DefPowierzchni  ";
+        public static string getPowierzchnieFull = @"select IDPow, IDModel, NazwaSkr, NazwaPow, Promien, PoczWspY, PoczWspX, RozmOczekY, RozmOczekX, LbaOczekY, LbaOczekX, IlPkt, IlSektor, Wykladnik, PowObrys, 
+                                               DataPowierzchni, minZ, maxZ, ileTri, ileGrd, trojkaty_bin, punkty_bin, ilePkt, RTree_bin, RTree_bin_rozmiar, grid_bin, linie_bin, ileLinii, minX, maxX, minY, maxY from DefPowierzchni";
 
         public static string getPowierzchnieDeclaration = "select IDPow, IDModel, NazwaSkr, NazwaPow from DefPowierzchni  ";
 

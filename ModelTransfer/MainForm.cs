@@ -116,11 +116,8 @@ namespace ModelTransfer
         private bool establishConnection()
         {
             dbConnector = new DBConnector(userLogin, userPassword);
-#if DEBUG
-            currentPath = @"C:\testDesktop\conf";
-#else
             currentPath = Application.StartupPath;
-#endif
+
             if (dbConnector.validateConfigFile(currentPath))
             {
                 dbConnection = dbConnector.getDBConnection(ConnectionSources.serverNameInFile, ConnectionTypes.sqlAuthorisation);
@@ -500,7 +497,7 @@ namespace ModelTransfer
                 {
                     pow.powDataTable = dbReader.readFromDBToDataTable(SqlQueries.getPowierzchnieFull + SqlQueries.getPowierzchnie_byIdPowFilter + pow.idPow);
                 }
-                readPowierzchniaDataFromDB(pow);
+                //readPowierzchniaDataFromDB(pow);
                 model.addPowierzchnia(pow);
             }
         }
@@ -923,7 +920,7 @@ namespace ModelTransfer
                 pow.idPow = maxPowId;
 
                 //zapisuję dane szczegółowe każdej powierzchni do bazy, tj. punkty, trójkąty itd
-                writePowierzchniaDataToDB(pow);
+                //writePowierzchniaDataToDB(pow);
             }
         }
 
