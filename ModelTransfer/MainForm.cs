@@ -498,6 +498,7 @@ namespace ModelTransfer
                     pow.powDataTable = dbReader.readFromDBToDataTable(SqlQueries.getPowierzchnieFull + SqlQueries.getPowierzchnie_byIdPowFilter + pow.idPow);
                 }
                 //readPowierzchniaDataFromDB(pow);
+                pow.powObrys = dbReader.readScalarFromDB("Select PowObrys from DefPowierzchni " + SqlQueries.getPowierzchnie_byIdPowFilter + pow.idPow).ToString();
                 model.addPowierzchnia(pow);
             }
         }
@@ -809,7 +810,7 @@ namespace ModelTransfer
                 }
 
                 string query = SqlQueries.insertModel.Replace("@nazwaModel", nazwaModel).Replace("@opisModel", opisModel).Replace("@dataModel", dataModel).Replace("@idUzytk", newIdUzytk).Replace("@czyArch", newCzyArch).Replace("@directoryId", newDirectoryId).Replace("@idWlasciciel", newIdWlasciciel);
-                dbWriter.writeToDB(query);
+                dbWriter.executeQuery(query);
 
                 if (loopNumber == 0)         //wpis modelu robię przez insert, baza danych automatycznie nadaje mu ID, które teraz odczytuję
                 {
@@ -841,7 +842,7 @@ namespace ModelTransfer
             {
                 checkedDirectories.TryGetValue(dirId, out dir);
                 query = SqlQueries.insertDirectory.Replace("@directoryName", dir.name);
-                dbWriter.writeToDB(query);
+                dbWriter.executeQuery(query);
 
                 if (i == 0)         //wpis robię przez insert, baza danych automatycznie nadaje kolejne ID, które teraz odczytuję
                 {
@@ -879,7 +880,7 @@ namespace ModelTransfer
                         //jeżeli parent Id był null, tzn gałąź została odcięta od pnia, to podpinam ten katalog pod wybrany przez użytkownika
                     query = SqlQueries.updateDirectoryParentId.Replace("@newParentId", selectedRootDirId) + dir.newId;
                 }
-                dbWriter.writeToDB(query);
+                dbWriter.executeQuery(query);
             }
         }
 
@@ -918,6 +919,8 @@ namespace ModelTransfer
                 }
                     //w każdej powierzchni, w danych składowych tj trójkątów, punktów itd  zmieniam ID powierzchni na nowy, w nowej bazie danych
                 pow.idPow = maxPowId;
+                //mając id aktualizuję PowObrys
+                dbWriter.executeQuery("Update DefPowierzchni set PowObrys = '" + pow.powObrys + "'" + SqlQueries.getPowierzchnie_byIdPowFilter + pow.idPow);
 
                 //zapisuję dane szczegółowe każdej powierzchni do bazy, tj. punkty, trójkąty itd
                 //writePowierzchniaDataToDB(pow);

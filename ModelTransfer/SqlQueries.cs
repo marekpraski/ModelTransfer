@@ -56,8 +56,9 @@ namespace ModelTransfer
         public static string getPowierzchnieNoBlob = @"IDPow, IDModel, NazwaSkr, NazwaPow, Promien, PoczWspY, PoczWspX, RozmOczekY, RozmOczekX, LbaOczekY, LbaOczekX, IlPkt, IlSektor, Wykladnik, PowObrys, 
                                                DataPowierzchni, minZ, maxZ, punkty_bin, ilePkt, linie_bin, ileLinii, minX, maxX, minY, maxY from DefPowierzchni  ";
 
-        public static string getPowierzchnieFull = @"select IDPow, IDModel, NazwaSkr, NazwaPow, Promien, PoczWspY, PoczWspX, RozmOczekY, RozmOczekX, LbaOczekY, LbaOczekX, IlPkt, IlSektor, Wykladnik, PowObrys, 
-                                               DataPowierzchni, minZ, maxZ, ileTri, ileGrd, trojkaty_bin, punkty_bin, ilePkt, RTree_bin, RTree_bin_rozmiar, grid_bin, linie_bin, ileLinii, minX, maxX, minY, maxY from DefPowierzchni";
+        public static string getPowierzchnieFull = "select * from DefPowierzchni ";
+            //@"select IDPow, IDModel, NazwaSkr, NazwaPow, Promien, PoczWspY, PoczWspX, RozmOczekY, RozmOczekX, LbaOczekY, LbaOczekX, IlPkt, IlSektor, Wykladnik, PowObrys, 
+                                               //DataPowierzchni, minZ, maxZ, ileTri, ileGrd, trojkaty_bin, punkty_bin, ilePkt, RTree_bin, RTree_bin_rozmiar, grid_bin, linie_bin, ileLinii, minX, maxX, minY, maxY from DefPowierzchni";
 
         public static string getPowierzchnieDeclaration = "select IDPow, IDModel, NazwaSkr, NazwaPow from DefPowierzchni  ";
 

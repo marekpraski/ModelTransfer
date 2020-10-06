@@ -97,5 +97,37 @@ namespace ModelTransfer
             }
             return data;
         }
+
+        /// <summary>
+        /// zwraca pierwszą kolumnę pierwszego wiersza kwerendy, wykorzystuje metodę SqlCommand.ExecuteScalar()
+        /// </summary>
+        /// <param name="sqlQuery"></param>
+        /// <returns></returns>
+        public object readScalarFromDB(string sqlQuery)
+        {
+            SqlCommand sqlCommand = null;
+            object result = null;
+            try
+            {
+                sqlCommand = new SqlCommand(sqlQuery, dbConnection);
+                dbConnection.Open();
+                result = sqlCommand.ExecuteScalar();
+            }
+            catch (SqlException e)
+            {
+                MyMessageBox.display(e.Message + "\r\n" + dbConnection.ConnectionString + e.StackTrace);
+            }
+            catch (InvalidOperationException exc)
+            {
+                MyMessageBox.display(exc.Message + "  \r\n " + exc.StackTrace);
+            }
+            finally
+            {
+                dbConnection.Close();
+                if (sqlCommand != null)
+                    sqlCommand.Dispose();
+            }
+            return result;
+        }
     }
 }

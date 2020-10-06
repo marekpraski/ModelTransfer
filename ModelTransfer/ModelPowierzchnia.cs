@@ -33,6 +33,7 @@ namespace ModelTransfer
 
         public object[] powierzchniaData { get; set; }
         public DataTable powDataTable { get; set; }
+        public string powObrys { get; set; }
         public List<string> columnHeaders { get; set; }
         public List<string> columnDataTypes { get; set; }
 

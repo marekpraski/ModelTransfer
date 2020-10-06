@@ -18,14 +18,33 @@ namespace ModelTransfer
             this.dbConnection = connection;
         }
 
-        public void writeToDB(string sqlQuery)
+        public void executeQuery(string sqlQuery)
         {
-            List<string> queries = new List<string>();
-            queries.Add(sqlQuery);
-            writeToDB(queries);
+            SqlCommand sCommand = null;
+            try
+            {
+                sCommand = new SqlCommand(sqlQuery, dbConnection);
+                sCommand.CommandTimeout = 3600;
+                dbConnection.Open();
+                sCommand.ExecuteNonQuery();
+
+            }
+            catch (System.Data.SqlClient.SqlException e)
+            {
+                MyMessageBox.display(e.Message + "\r\n" + dbConnection.ConnectionString + e.StackTrace);
+            }
+            catch (InvalidOperationException exc)
+            {
+                MyMessageBox.display(exc.Message + "  \r\n " + exc.StackTrace);
+            }
+            finally
+            {
+                dbConnection.Close();
+                sCommand.Dispose();
+            }
         }    
         
-        public void writeToDB(List<string> queries)
+        public void executeQuery(List<string> queries)
         {
             SqlDataAdapter adapter = new SqlDataAdapter();
             foreach (string query in queries)
@@ -70,6 +89,7 @@ namespace ModelTransfer
 
             bulkCopy.DestinationTableName = tableName;
             bulkCopy.BulkCopyTimeout = ProgramSettings.bulkCopyTimeout;
+            autoMapColumns(bulkCopy, data);
 
             dbConnection.Open();
 
@@ -90,8 +110,14 @@ namespace ModelTransfer
             {
                 if (dbConnection.State == ConnectionState.Open) dbConnection.Close();
             }
+        }
 
-
+        private void autoMapColumns(SqlBulkCopy sbc, DataTable dt)
+        {
+            foreach (DataColumn column in dt.Columns)
+            {
+                sbc.ColumnMappings.Add(column.ColumnName, column.ColumnName);
+            }
         }
     }
 }
