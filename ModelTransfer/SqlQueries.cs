@@ -53,7 +53,7 @@ namespace ModelTransfer
         //powierzchnie
         //
 
-        public static string getPowierzchnieNoBlob = @"IDPow, IDModel, NazwaSkr, NazwaPow, Promien, PoczWspY, PoczWspX, RozmOczekY, RozmOczekX, LbaOczekY, LbaOczekX, IlPkt, IlSektor, Wykladnik, PowObrys, 
+        public static string getPowierzchnieNoBlob = @"select IDPow, IDModel, NazwaSkr, NazwaPow, Promien, PoczWspY, PoczWspX, RozmOczekY, RozmOczekX, LbaOczekY, LbaOczekX, IlPkt, IlSektor, Wykladnik, PowObrys, 
                                                DataPowierzchni, minZ, maxZ, punkty_bin, ilePkt, linie_bin, ileLinii, minX, maxX, minY, maxY from DefPowierzchni  ";
 
         public static string getPowierzchnieFull = "select * from DefPowierzchni ";
