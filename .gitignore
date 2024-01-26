@@ -1,3 +1,3 @@
 /ModelTransfer/bin/
 /ModelTransfer/obj/
-*.diagsession
+/.vs/

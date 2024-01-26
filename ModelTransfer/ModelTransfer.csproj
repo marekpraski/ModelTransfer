@@ -8,9 +8,10 @@
     <OutputType>WinExe</OutputType>
     <RootNamespace>ModelTransfer</RootNamespace>
     <AssemblyName>ModelTransfer</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <Deterministic>true</Deterministic>
+    <Deterministic>false</Deterministic>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -46,9 +47,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DBValueTypeConverter.cs" />
-    <Compile Include="DBConnector.cs" />
-    <Compile Include="DBReader.cs" />
-    <Compile Include="DBWriter.cs" />
     <Compile Include="DirectoryTreeControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -56,12 +54,6 @@
       <DependentUpon>DirectoryTreeControl.cs</DependentUpon>
     </Compile>
     <Compile Include="FileManipulator.cs" />
-    <Compile Include="Form1.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Form1.Designer.cs">
-      <DependentUpon>Form1.cs</DependentUpon>
-    </Compile>
     <Compile Include="GetDirectoryAndUserForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -99,17 +91,12 @@
     <Compile Include="ProgramSettings.cs" />
     <Compile Include="ProgressEventArgs.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="QueryData.cs" />
     <Compile Include="SqlQueries.cs" />
-    <Compile Include="TextManipulator.cs" />
     <Compile Include="TextProgressBar.cs">
       <SubType>Component</SubType>
     </Compile>
     <EmbeddedResource Include="DirectoryTreeControl.resx">
       <DependentUpon>DirectoryTreeControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Form1.resx">
-      <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="GetDirectoryAndUserForm.resx">
       <DependentUpon>GetDirectoryAndUserForm.cs</DependentUpon>
@@ -144,6 +131,16 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\DatabaseInterface\DatabaseInterface\DatabaseInterface.csproj">
+      <Project>{cae4b502-3aa3-4f98-a140-9d6438fb070a}</Project>
+      <Name>DatabaseInterface</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\UtilityTools\UtilityTools\UtilityTools.csproj">
+      <Project>{958e338d-e246-40fb-b1c4-8b362756bbb5}</Project>
+      <Name>UtilityTools</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

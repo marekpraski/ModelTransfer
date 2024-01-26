@@ -3,35 +3,24 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Data.SqlClient;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
-using System.Diagnostics;
 using System.Threading;
-using System.Timers;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.IO.Compression;
+using DatabaseInterface;
 
 namespace ModelTransfer
 {
     public partial class MainForm : Form
     {
-
         #region Region - parametry
 
-        private string userLogin = "";
-        private string userPassword = "";
-
-        private string currentPath = "";     //katalog z którego uruchamiany jest program, wykrywany przez DBConnector i ustawiany tutaj
-                                             //dla DEBUGA ustawiony jest w metodzie ReadAllData
-     
+        private string currentPath = Program.mainPath;     
 
         private DBWriter dbWriter;
         private DBConnector dbConnector;
-        private SqlConnection dbConnection;
+        private SqlConnection dbConnection = Program.dbConnection;
 
         private bool userClicked = false;
         private bool getModelsFromDirectories = false;           //true jeżeli istnieje gałąź w drzewie katalogów, która ma zaznaczony checkbox
@@ -56,45 +45,37 @@ namespace ModelTransfer
 
         #endregion
 
+        #region Region - konstruktor, ustawienia tej formatki
 
-
-#region Region - konstruktor, ustawienia tej formatki
-
-        public MainForm(string login, string pass)
+        public MainForm()
         {
             InitializeComponent();
-            this.userLogin = login;
-            this.userPassword = pass;
             setupThisForm();
         }
 
-
         private void setupThisForm()
         {
-            if (establishConnection())
-            {
-                hideProgressItems();
-                saveModelOptionsCombo.Items.AddRange(modelSaveOptions);
+            hideProgressItems();
+            saveModelOptionsCombo.Items.AddRange(modelSaveOptions);
 #if DEBUG
-                saveModelOptionsCombo.SelectedIndex = 0;                    //domyślna opcja kombo
+            saveModelOptionsCombo.SelectedIndex = 0;                    //domyślna opcja kombo
 #else
-                saveModelOptionsCombo.SelectedIndex = 1;
+            saveModelOptionsCombo.SelectedIndex = 1;
 #endif
 
-                //ustawienia eksploratora plików
-                openFileDialog1.Filter = "Pliki modeli (*.bin)|*.bin";
-                openFileDialog1.InitialDirectory = currentPath;
+            //ustawienia eksploratora plików
+            openFileDialog1.Filter = "Pliki modeli (*.bin)|*.bin";
+            openFileDialog1.InitialDirectory = currentPath;
 
-                //ustawienia kontrolki drzewa katalogów
-                directoryTreeControl1.directorySelectedEvent += onTreeviewDirectorySelected;
-                directoryTreeControl1.directoryCheckedEvent += onTreeviewDirectoryChecked;
+            //ustawienia kontrolki drzewa katalogów
+            directoryTreeControl1.directorySelectedEvent += onTreeviewDirectorySelected;
+            directoryTreeControl1.directoryCheckedEvent += onTreeviewDirectoryChecked;
 
-                directoryTreeControl1.turnTreeviewCheckboxesOn();
-                directoryTreeControl1.showUncheckAllCheckboxesLabel();
-                directoryTreeControl1.toolTipText = "zaznacz nazwę by wybrać pojedyncze modele; \r\nzaznacz checkbox przy nazwie by wybrać cały katalog;\r\nzaznaczenie checkboxa deaktywuje okno wyboru modeli";
-                DBReader dbReader = new DBReader(dbConnection);
-                directoryTreeControl1.setUpThisForm(dbReader);
-            }
+            directoryTreeControl1.turnTreeviewCheckboxesOn();
+            directoryTreeControl1.showUncheckAllCheckboxesLabel();
+            directoryTreeControl1.toolTipText = "zaznacz nazwę by wybrać pojedyncze modele; \r\nzaznacz checkbox przy nazwie by wybrać cały katalog;\r\nzaznaczenie checkboxa deaktywuje okno wyboru modeli";
+            DBReader dbReader = new DBReader(dbConnection);
+            directoryTreeControl1.setUpThisForm(dbReader);
         }
 
 
@@ -108,29 +89,7 @@ namespace ModelTransfer
 
         #endregion
 
-
-
-#region Region - start programu, utworzenie połączenia z bazą danych
-
-
-        private bool establishConnection()
-        {
-            dbConnector = new DBConnector(userLogin, userPassword);
-            currentPath = Application.StartupPath;
-
-            if (dbConnector.validateConfigFile(currentPath))
-            {
-                dbConnection = dbConnector.getDBConnection(ConnectionSources.serverNameInFile, ConnectionTypes.sqlAuthorisation);
-                return true;
-            }
-            return false;
-        }
-
-#endregion
-
-
-
-#region Region - zdarzenia wywołane  przez interakcję użytkownika w tej formatce
+        #region Region - zdarzenia wywołane  przez interakcję użytkownika w tej formatce
 
         private void modelsListView_MouseClick(object sender, MouseEventArgs e)
         {
@@ -196,10 +155,7 @@ namespace ModelTransfer
 
     #endregion
 
-
-
-
-#region Region - obsługa paska postępu
+        #region Region - obsługa paska postępu
 
         //wskaźnik do funkcji sterującej paskiem postępu
         public delegate void showProgressDelegate(int number, int modelsTotal, string modelName);
@@ -275,9 +231,6 @@ namespace ModelTransfer
 
 
         #endregion
-
-
-
 
         #region Region - czytanie modeli z bazy danych i zapisywanie do pliku
 
@@ -472,7 +425,7 @@ namespace ModelTransfer
             QueryData powierzchnieData = dbReader.readFromDB(query);
             List<string> paramTypes = powierzchnieData.getDataTypes();
 
-            for(int i=0; i < powierzchnieData.getDataRowsNumber(); i++)
+            for(int i=0; i < powierzchnieData.dataRowsNumber; i++)
             {
                 ModelPowierzchnia pow = new ModelPowierzchnia();
 
@@ -652,8 +605,6 @@ namespace ModelTransfer
 
 
         #endregion
-
-
 
         #region Region - czytanie modeli z pliku binarnego i zapisywanie do bazy danych
 
