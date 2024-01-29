@@ -74,9 +74,10 @@ namespace ModelTransfer
 			if (!assignProgramParameters(args))
 				return;
 
+			createSqlConnection(args);
+
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault(false);
-			createSqlConnection(args);
 
 			try
 			{
@@ -107,7 +108,7 @@ namespace ModelTransfer
 			DBConnectionData connData = new DBConnectionData()
 			{
 				serverName = confReader.getNodeValue("server"),
-				dbName = confReader.getNodeValue("db_modelTransfer"),
+				dbName = confReader.getNodeValue("db_modeler"),
 				login = Program.userName,
 				password = Program.userPassword
 			};

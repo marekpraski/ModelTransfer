@@ -99,7 +99,7 @@ namespace ModelTransfer
         //
 
         public static string insertModel = "insert into DefModel2D(NazwaModel, OpisModel, DataModel, IDUzytk, CzyArch, DirectoryId, IDUzytkWlasciciel) " + 
-                                            "values (@nazwaModel, @opisModel, @dataModel, @idUzytk, @czyArch, @directoryId, @idWlasciciel);\r\n ";
+                                            "values (@nazwaModel, @opisModel, '@dataModel', @idUzytk, @czyArch, @directoryId, @idWlasciciel);\r\n ";
 
 
         public static string getUsers = "select IDUzytk, Uzytkownik from Uzytkownik ";
