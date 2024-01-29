@@ -104,9 +104,13 @@ namespace ModelTransfer
             if (modelsListView.CheckedItems.Count > 0 || getModelsFromDirectories)
             {
                 this.saveModelOption = saveModelOptionsCombo.SelectedIndex;
-                GetFileNameForm fnForm = new GetFileNameForm();
-                fnForm.GetFileNameEvent += onGetFileNameForm_ButtonClick;
-                fnForm.ShowDialog();
+				SaveFileDialog saveFileDialog = new SaveFileDialog();
+				saveFileDialog.Filter = "pliki binarne bin (*.bin)|*.bin";
+				saveFileDialog.InitialDirectory = "";
+				saveFileDialog.FileName = "";
+				DialogResult result = saveFileDialog.ShowDialog();
+                if (result == DialogResult.OK)
+                    onGetFileName(saveFileDialog.FileName);
             }
             else
             {
@@ -114,7 +118,7 @@ namespace ModelTransfer
             }
         }
 
-        private void SaveToDBButton_Click(object sender, EventArgs e)
+		private void SaveToDBButton_Click(object sender, EventArgs e)
         {
             resetParameters();
             openFileDialog1.ShowDialog();            
@@ -240,12 +244,12 @@ namespace ModelTransfer
 
 
         //zdarzenie w formatce GetFileNameForm, tu uruchamiam osobny wątek
-        private void onGetFileNameForm_ButtonClick(object sender, MyEventArgs args)
+        private void onGetFileName(string fileName)
         {
             showProgressItems("zapisuję do pliku");
             string selectedModelIds = getSelectedModelIds();        //zanim uruchomię wątek, bo czytam z listy w tej formatce
             //uruchamiam wątek po wyświetleniu elementów paska postępu
-            computationsThread = new Thread(() => saveModelsFromDbToFile(args.fileName, selectedModelIds));
+            computationsThread = new Thread(() => saveModelsFromDbToFile(fileName, selectedModelIds));
             computationsThread.Start();
         }
 
@@ -404,15 +408,11 @@ namespace ModelTransfer
                 pow.columnDataTypes = powierzchnieData.getDataTypes();
 
                 //teraz w zależności od opcji czytam pełne dane powierzchni i zapisuję do DataTable
-                if (saveModelOption == 0)
-                {
+                if (saveModelOption == 0)   //same punkty
                     pow.powDataTable = dbReader.readFromDBToDataTable(SqlQueries.getPowierzchnieNoBlob + SqlQueries.getPowierzchnie_byIdPowFilter + pow.idPow);
-                }
                 else
-                {
                     pow.powDataTable = dbReader.readFromDBToDataTable(SqlQueries.getPowierzchnieFull + SqlQueries.getPowierzchnie_byIdPowFilter + pow.idPow);
-                }
-                pow.powObrys = dbReader.readScalarFromDB("Select PowObrys from DefPowierzchni " + SqlQueries.getPowierzchnie_byIdPowFilter + pow.idPow).ToString();
+
                 model.addPowierzchnia(pow);
             }
 		}
@@ -421,16 +421,6 @@ namespace ModelTransfer
         private void writeModelsToFile(string fileName)
         {
             string fileSaveDir = Program.mainPath;
-
-            if (fileName == null || fileName == "")
-            {
-                fileName = "modele.bin";
-            }
-            else
-            {
-                fileName += ".bin";
-            }
-
             string serializationFile = Path.Combine(fileSaveDir, fileName);
 
             initializeFile(serializationFile);

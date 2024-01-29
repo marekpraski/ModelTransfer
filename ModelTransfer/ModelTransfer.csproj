@@ -82,12 +82,6 @@
     <Compile Include="MainForm.Designer.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="GetFileNameForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="GetFileNameForm.Designer.cs">
-      <DependentUpon>GetFileNameForm.cs</DependentUpon>
-    </Compile>
     <Compile Include="Model2D.cs" />
     <Compile Include="ModelDirectory.cs" />
     <Compile Include="ModelGrid.cs" />
@@ -117,9 +111,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="GetFileNameForm.resx">
-      <DependentUpon>GetFileNameForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="MyMessageBox.resx">
       <DependentUpon>MyMessageBox.cs</DependentUpon>
