@@ -32,12 +32,6 @@
 			this.modelsListView = new System.Windows.Forms.ListView();
 			this.modelIdColHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.modelNameColHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-			this.toolStrip1 = new System.Windows.Forms.ToolStrip();
-			this.toolStripSaveToFileButton = new System.Windows.Forms.ToolStripButton();
-			this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
-			this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-			this.modelsFromFileButton = new System.Windows.Forms.ToolStripButton();
-			this.helpButton = new System.Windows.Forms.ToolStripButton();
 			this.chooseModelsLabel = new System.Windows.Forms.Label();
 			this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
 			this.infoLabel = new System.Windows.Forms.Label();
@@ -47,9 +41,14 @@
 			this.progressAreaPanel = new System.Windows.Forms.Panel();
 			this.modelNameLabel = new System.Windows.Forms.Label();
 			this.directoryTreeControl1 = new ModelTransfer.DirectoryTreeControl();
-			this.saveModelOptionsCombo = new System.Windows.Forms.ToolStripComboBox();
-			this.toolStrip1.SuspendLayout();
+			this.toolStripSaveToFileButton = new System.Windows.Forms.ToolStripButton();
+			this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+			this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+			this.modelsFromFileButton = new System.Windows.Forms.ToolStripButton();
+			this.helpButton = new System.Windows.Forms.ToolStripButton();
+			this.toolStrip1 = new System.Windows.Forms.ToolStrip();
 			this.progressAreaPanel.SuspendLayout();
+			this.toolStrip1.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// modelsListView
@@ -80,62 +79,6 @@
 			// 
 			this.modelNameColHeader.Text = "Nazwa Modelu";
 			this.modelNameColHeader.Width = 230;
-			// 
-			// toolStrip1
-			// 
-			this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.saveModelOptionsCombo,
-            this.toolStripSaveToFileButton,
-            this.toolStripSeparator2,
-            this.toolStripSeparator1,
-            this.modelsFromFileButton,
-            this.helpButton});
-			this.toolStrip1.Location = new System.Drawing.Point(0, 0);
-			this.toolStrip1.Name = "toolStrip1";
-			this.toolStrip1.Size = new System.Drawing.Size(635, 25);
-			this.toolStrip1.TabIndex = 1;
-			this.toolStrip1.Text = "toolStrip1";
-			// 
-			// toolStripSaveToFileButton
-			// 
-			this.toolStripSaveToFileButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-			this.toolStripSaveToFileButton.Enabled = false;
-			this.toolStripSaveToFileButton.Image = ((System.Drawing.Image)(resources.GetObject("toolStripSaveToFileButton.Image")));
-			this.toolStripSaveToFileButton.ImageTransparentColor = System.Drawing.Color.Magenta;
-			this.toolStripSaveToFileButton.Name = "toolStripSaveToFileButton";
-			this.toolStripSaveToFileButton.Size = new System.Drawing.Size(23, 22);
-			this.toolStripSaveToFileButton.ToolTipText = "zapisz modele do pliku";
-			this.toolStripSaveToFileButton.Click += new System.EventHandler(this.SaveToFileButton_Click);
-			// 
-			// toolStripSeparator2
-			// 
-			this.toolStripSeparator2.Name = "toolStripSeparator2";
-			this.toolStripSeparator2.Size = new System.Drawing.Size(6, 25);
-			// 
-			// toolStripSeparator1
-			// 
-			this.toolStripSeparator1.Name = "toolStripSeparator1";
-			this.toolStripSeparator1.Size = new System.Drawing.Size(6, 25);
-			// 
-			// modelsFromFileButton
-			// 
-			this.modelsFromFileButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-			this.modelsFromFileButton.Image = ((System.Drawing.Image)(resources.GetObject("modelsFromFileButton.Image")));
-			this.modelsFromFileButton.ImageTransparentColor = System.Drawing.Color.Magenta;
-			this.modelsFromFileButton.Name = "modelsFromFileButton";
-			this.modelsFromFileButton.Size = new System.Drawing.Size(23, 22);
-			this.modelsFromFileButton.ToolTipText = "zapisz modele z pliku do bazy";
-			this.modelsFromFileButton.Click += new System.EventHandler(this.SaveToDBButton_Click);
-			// 
-			// helpButton
-			// 
-			this.helpButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-			this.helpButton.Image = ((System.Drawing.Image)(resources.GetObject("helpButton.Image")));
-			this.helpButton.ImageTransparentColor = System.Drawing.Color.Magenta;
-			this.helpButton.Name = "helpButton";
-			this.helpButton.Size = new System.Drawing.Size(23, 22);
-			this.helpButton.ToolTipText = "pomoc";
-			this.helpButton.Click += new System.EventHandler(this.HelpButton_Click);
 			// 
 			// chooseModelsLabel
 			// 
@@ -219,10 +162,60 @@
 			this.directoryTreeControl1.TabIndex = 2;
 			this.directoryTreeControl1.toolTipText = null;
 			// 
-			// saveModelOptionsCombo
+			// toolStripSaveToFileButton
 			// 
-			this.saveModelOptionsCombo.Name = "saveModelOptionsCombo";
-			this.saveModelOptionsCombo.Size = new System.Drawing.Size(121, 25);
+			this.toolStripSaveToFileButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+			this.toolStripSaveToFileButton.Enabled = false;
+			this.toolStripSaveToFileButton.Image = ((System.Drawing.Image)(resources.GetObject("toolStripSaveToFileButton.Image")));
+			this.toolStripSaveToFileButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.toolStripSaveToFileButton.Name = "toolStripSaveToFileButton";
+			this.toolStripSaveToFileButton.Size = new System.Drawing.Size(23, 22);
+			this.toolStripSaveToFileButton.ToolTipText = "zapisz modele do pliku";
+			this.toolStripSaveToFileButton.Click += new System.EventHandler(this.SaveToFileButton_Click);
+			// 
+			// toolStripSeparator2
+			// 
+			this.toolStripSeparator2.Name = "toolStripSeparator2";
+			this.toolStripSeparator2.Size = new System.Drawing.Size(6, 25);
+			// 
+			// toolStripSeparator1
+			// 
+			this.toolStripSeparator1.Name = "toolStripSeparator1";
+			this.toolStripSeparator1.Size = new System.Drawing.Size(6, 25);
+			// 
+			// modelsFromFileButton
+			// 
+			this.modelsFromFileButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+			this.modelsFromFileButton.Image = ((System.Drawing.Image)(resources.GetObject("modelsFromFileButton.Image")));
+			this.modelsFromFileButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.modelsFromFileButton.Name = "modelsFromFileButton";
+			this.modelsFromFileButton.Size = new System.Drawing.Size(23, 22);
+			this.modelsFromFileButton.ToolTipText = "zapisz modele z pliku do bazy";
+			this.modelsFromFileButton.Click += new System.EventHandler(this.SaveToDBButton_Click);
+			// 
+			// helpButton
+			// 
+			this.helpButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+			this.helpButton.Image = ((System.Drawing.Image)(resources.GetObject("helpButton.Image")));
+			this.helpButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+			this.helpButton.Name = "helpButton";
+			this.helpButton.Size = new System.Drawing.Size(23, 22);
+			this.helpButton.ToolTipText = "pomoc";
+			this.helpButton.Click += new System.EventHandler(this.HelpButton_Click);
+			// 
+			// toolStrip1
+			// 
+			this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripSaveToFileButton,
+            this.toolStripSeparator2,
+            this.toolStripSeparator1,
+            this.modelsFromFileButton,
+            this.helpButton});
+			this.toolStrip1.Location = new System.Drawing.Point(0, 0);
+			this.toolStrip1.Name = "toolStrip1";
+			this.toolStrip1.Size = new System.Drawing.Size(635, 25);
+			this.toolStrip1.TabIndex = 1;
+			this.toolStrip1.Text = "toolStrip1";
 			// 
 			// MainForm
 			// 
@@ -236,10 +229,10 @@
 			this.Controls.Add(this.modelsListView);
 			this.Name = "MainForm";
 			this.Text = "Modeler2D model transfer";
-			this.toolStrip1.ResumeLayout(false);
-			this.toolStrip1.PerformLayout();
 			this.progressAreaPanel.ResumeLayout(false);
 			this.progressAreaPanel.PerformLayout();
+			this.toolStrip1.ResumeLayout(false);
+			this.toolStrip1.PerformLayout();
 			this.ResumeLayout(false);
 			this.PerformLayout();
 
@@ -250,13 +243,8 @@
         private System.Windows.Forms.ListView modelsListView;
         private System.Windows.Forms.ColumnHeader modelIdColHeader;
         private System.Windows.Forms.ColumnHeader modelNameColHeader;
-        private System.Windows.Forms.ToolStrip toolStrip1;
-        private System.Windows.Forms.ToolStripButton toolStripSaveToFileButton;
-        private System.Windows.Forms.ToolStripButton modelsFromFileButton;
-        private System.Windows.Forms.ToolStripButton helpButton;
         private DirectoryTreeControl directoryTreeControl1;
         private System.Windows.Forms.Label chooseModelsLabel;
-        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.OpenFileDialog openFileDialog1;
         private System.Windows.Forms.Label infoLabel;
         private System.Windows.Forms.ProgressBar progressBar1;
@@ -264,8 +252,12 @@
         private System.Windows.Forms.Button abortButton;
         private System.Windows.Forms.Panel progressAreaPanel;
         private System.Windows.Forms.Label modelNameLabel;
-        private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
-		private System.Windows.Forms.ToolStripComboBox saveModelOptionsCombo;
+		private System.Windows.Forms.ToolStripButton toolStripSaveToFileButton;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+		private System.Windows.Forms.ToolStripButton modelsFromFileButton;
+		private System.Windows.Forms.ToolStripButton helpButton;
+		private System.Windows.Forms.ToolStrip toolStrip1;
 	}
 }
 

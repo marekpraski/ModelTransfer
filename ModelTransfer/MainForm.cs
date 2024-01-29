@@ -28,14 +28,10 @@ namespace ModelTransfer
 
         private Thread computationsThread;
 
-        private int saveModelOption = 0;        //ustawiany po naciśnięciu przycisku zapisu do pliku na podstawie wyboru opcji w kombo
-
         private bool directoriesChecked = false;        //aktualizowana przez zdarzenie zafajkowania checkboxa w drzewie katalogów; 
                                                         //powoduje zatrzymanie wypełniania okna listy modeli po zaznaczeniu katalogu
                                                         //jeżeli nie nałożę tej blokady, występuje konflikt pomiędzy wątkiem wczytującym modele w celu zapisania do pliku a wątkiem wypełniającym okno modeli
                                                         //co wywala błąd DBReadera (połączenie otwarte)
-
-        private string[] modelSaveOptions = { "same punkty", "pełne modele" };      //opcje kombo
 
         #endregion
 
@@ -50,12 +46,6 @@ namespace ModelTransfer
         private void setupThisForm()
         {
             hideProgressItems();
-            saveModelOptionsCombo.Items.AddRange(modelSaveOptions);
-#if DEBUG
-            saveModelOptionsCombo.SelectedIndex = 0;                    //domyślna opcja kombo
-#else
-            saveModelOptionsCombo.SelectedIndex = 1;
-#endif
 
             //ustawienia eksploratora plików
             openFileDialog1.Filter = "Pliki modeli (*.bin)|*.bin";
@@ -103,7 +93,6 @@ namespace ModelTransfer
 
             if (modelsListView.CheckedItems.Count > 0 || getModelsFromDirectories)
             {
-                this.saveModelOption = saveModelOptionsCombo.SelectedIndex;
 				SaveFileDialog saveFileDialog = new SaveFileDialog();
 				saveFileDialog.Filter = "pliki binarne bin (*.bin)|*.bin";
 				saveFileDialog.InitialDirectory = "";
@@ -407,11 +396,7 @@ namespace ModelTransfer
                 pow.columnHeaders = powierzchnieData.getHeaders();
                 pow.columnDataTypes = powierzchnieData.getDataTypes();
 
-                //teraz w zależności od opcji czytam pełne dane powierzchni i zapisuję do DataTable
-                if (saveModelOption == 0)   //same punkty
-                    pow.powDataTable = dbReader.readFromDBToDataTable(SqlQueries.getPowierzchnieNoBlob + SqlQueries.getPowierzchnie_byIdPowFilter + pow.idPow);
-                else
-                    pow.powDataTable = dbReader.readFromDBToDataTable(SqlQueries.getPowierzchnieFull + SqlQueries.getPowierzchnie_byIdPowFilter + pow.idPow);
+                pow.powDataTable = dbReader.readFromDBToDataTable(SqlQueries.getPowierzchnie + SqlQueries.getPowierzchnie_byIdPowFilter + pow.idPow);
 
                 model.addPowierzchnia(pow);
             }
@@ -533,7 +518,6 @@ namespace ModelTransfer
             computationsThread.Start();
 
         }
-
 
         //metoda uruchamiana w osobnym wątku
         private void writeModelsFromFileToDB(MyEventArgs args)
@@ -690,7 +674,6 @@ namespace ModelTransfer
             }
         }
 
-
         private void writeDirectoryTreeToDB(Dictionary<string, ModelDirectory> checkedDirectories, string selectedRootDirId)
         {
             ModelDirectory dir;
@@ -760,7 +743,7 @@ namespace ModelTransfer
             modelIdsAfterRestoreDict.TryGetValue(model.idModel, out newModelId);
             model.setNewModelIdInPowierzchnia(newModelId);
 
-            string tableName = new DBConnector().getTableNameFromQuery(SqlQueries.getPowierzchnieNoBlob);
+            string tableName = new DBConnector().getTableNameFromQuery(SqlQueries.getPowierzchnie);
 
             for(int i=0; i < model.powierzchnieList.Count; i++)
             {
