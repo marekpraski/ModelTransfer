@@ -396,7 +396,7 @@ namespace ModelTransfer
                 pow.columnHeaders = powierzchnieData.getHeaders();
                 pow.columnDataTypes = powierzchnieData.getDataTypes();
 
-                pow.powDataTable = dbReader.readFromDBToDataTable(SqlQueries.getPowierzchnie + SqlQueries.getPowierzchnie_byIdPowFilter + pow.idPow);
+                pow.powDataTable = dbReader.readFromDBToDataTable(SqlQueries.getPowierzchnie + SqlQueries.getPowierzchnie_byIdPowFilter + pow.idPow, 120);
 
                 model.addPowierzchnia(pow);
             }
@@ -748,7 +748,7 @@ namespace ModelTransfer
             for(int i=0; i < model.powierzchnieList.Count; i++)
             {
                 ModelPowierzchnia pow = model.powierzchnieList[i];
-                dbWriter.writeBulkDataToDB(pow.powDataTable, tableName);
+                dbWriter.writeBulkDataToDB(pow.powDataTable, tableName, 120);
             }
         }        
 
