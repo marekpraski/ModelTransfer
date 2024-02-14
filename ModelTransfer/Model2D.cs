@@ -65,7 +65,7 @@ namespace ModelTransfer
             {
                 pow.idModel = newModelId;
 
-                DataColumn col = pow.powDataTable.Columns[SqlQueries.getPowierzchnie_idModelIndex];
+                DataColumn col = pow.powDataTable.Columns[1];   //w tablicy DefPowierzchni pole IdModel ma index 1
                 foreach (DataRow row in pow.powDataTable.Rows)
                 {
                     row[col] = newModelId;

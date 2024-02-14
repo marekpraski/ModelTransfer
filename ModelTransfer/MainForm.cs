@@ -372,35 +372,6 @@ namespace ModelTransfer
             return modelIds.Remove(index, 1);
         }
 
-        private void readPowierzchniaFromDB(Model2D model)
-        {
-            //najpierw potrzebuję jedynie utworzyć obiekty ModelPowierzchnia, potrzebuję do tego tylko niektóre dane
-            string query = SqlQueries.getPowierzchnieDeclaration + SqlQueries.getPowierzchnie_byIdModelFilter + model.idModel;
-
-            QueryData powierzchnieData = dbReader.readFromDB(query);
-            List<string> paramTypes = powierzchnieData.getDataTypes();
-
-            for(int i=0; i < powierzchnieData.dataRowsNumber; i++)
-            {
-                ModelPowierzchnia pow = new ModelPowierzchnia();
-
-                pow.idPow = powierzchnieData.getQueryData()[i][SqlQueries.getPowierzchnie_idPowIndex];
-
-                pow.idModel = powierzchnieData.getQueryData()[i][SqlQueries.getPowierzchnie_idModelIndex];
-                pow.idModel_dataType = paramTypes[SqlQueries.getPowierzchnie_idModelIndex];
-
-                pow.nazwaPow = powierzchnieData.getQueryData()[i][SqlQueries.getPowierzchnie_nazwaPowIndex];
-                pow.nazwaPow_dataType = paramTypes[SqlQueries.getPowierzchnie_nazwaPowIndex];
-
-                pow.powierzchniaData = powierzchnieData.getQueryData()[i];
-                pow.columnHeaders = powierzchnieData.getHeaders();
-                pow.columnDataTypes = powierzchnieData.getDataTypes();
-
-                pow.powDataTable = dbReader.readFromDBToDataTable(SqlQueries.getPowierzchnie + SqlQueries.getPowierzchnie_byIdPowFilter + pow.idPow, 120);
-
-                model.addPowierzchnia(pow);
-            }
-		}
 
         //w pliku zapisane są ciągiem pary: deklaracja długości danych(4 bajty) + buffer zawierający dane
         private void writeModelsToFile(string fileName)
@@ -414,96 +385,119 @@ namespace ModelTransfer
            
             for (int k=0; k<modelsTotal; k++)
             {
-                Model2D model = selectedModelDeclarations[0];
+                Model2D model = selectedModelDeclarations[0];   //zawsze pierwszy, bo lista jest skracana po zapisie do pliku
                 showProgress(k + 1, modelsTotal, model.nazwaModel.ToString());
 
                 readPowierzchniaFromDB(model);
                 addModelToFile(serializationFile, model);
-                selectedModelDeclarations.Remove(model);
+
+                selectedModelDeclarations.Remove(model);    //po dodaniu do pliku, usuwam z listy
             }
         }
 
-        //tworzy plik a następnie zapisuje strukturę danych, tj deklaracje modeli i słownik katalogów
-        private void initializeFile(string serializationFile)
-        {
-            ModelBundle modelBundle = new ModelBundle();
-            modelBundle.models = selectedModelDeclarations;
-            modelBundle.checkedDirectories = directoryTreeControl1.checkedDirectories;
-            
-            try
-            {
-                //serialize
-                using (FileStream stream = new FileStream(serializationFile, FileMode.Create))
-                {
+		//tworzy plik a następnie zapisuje strukturę danych, tj deklaracje modeli i słownik katalogów
+		private void initializeFile(string serializationFile)
+		{
+			ModelBundle modelBundle = new ModelBundle();
+			modelBundle.models = selectedModelDeclarations;
+			modelBundle.checkedDirectories = directoryTreeControl1.checkedDirectories;
 
-                    MemoryStream originalMemoryStream = new MemoryStream();
-                    MemoryStream compressedMemoryStream = new MemoryStream();
+			try
+			{
+				//serialize
+				using (FileStream stream = new FileStream(serializationFile, FileMode.Create))
+				{
 
-                    BinaryFormatter formatter = new BinaryFormatter();
-                    formatter.Serialize(originalMemoryStream, modelBundle);
+					MemoryStream originalMemoryStream = new MemoryStream();
+					MemoryStream compressedMemoryStream = new MemoryStream();
 
-                    using(GZipStream gzipStream = new GZipStream(compressedMemoryStream, CompressionMode.Compress))
-                    {
-                        originalMemoryStream.WriteTo(gzipStream);
-                    }
+					BinaryFormatter formatter = new BinaryFormatter();
+					formatter.Serialize(originalMemoryStream, modelBundle);
 
-                    byte[] buffer = compressedMemoryStream.ToArray();
-                    int bufferSize = buffer.Length;
-                    compressedMemoryStream.Close();
-                    originalMemoryStream.Close();
+					using (GZipStream gzipStream = new GZipStream(compressedMemoryStream, CompressionMode.Compress))
+					{
+						originalMemoryStream.WriteTo(gzipStream);
+					}
 
-                    using (BinaryWriter binWriter = new BinaryWriter(stream))
-                    {
-                        binWriter.Write(bufferSize);            //pierwsze 4 bajty
-                        binWriter.Write(buffer);
-                    }
-                }
-            }
-            catch (OutOfMemoryException exc)
-            {
-                MyMessageBox.display(exc.Message + "\r\nwriteModelsToFile");
-            }
-        }
+					byte[] buffer = compressedMemoryStream.ToArray();
+					int bufferSize = buffer.Length;
+					compressedMemoryStream.Close();
+					originalMemoryStream.Close();
 
-        private void addModelToFile(string serializationFile, Model2D model)
-        {
-            ModelBundle modelDataBundle = new ModelBundle();
-            modelDataBundle.addModel(model);
-            try
-            {
-                //serialize
-                using (FileStream stream = new FileStream(serializationFile, FileMode.Open))
-                {
+					using (BinaryWriter binWriter = new BinaryWriter(stream))
+					{
+						binWriter.Write(bufferSize);            //pierwsze 4 bajty
+						binWriter.Write(buffer);
+					}
+				}
+			}
+			catch (OutOfMemoryException exc)
+			{
+				MyMessageBox.display(exc.Message + "\r\nwriteModelsToFile");
+			}
+		}
 
-                    MemoryStream originalMemoryStream = new MemoryStream();
-                    MemoryStream compressedMemoryStream = new MemoryStream();
+		private void readPowierzchniaFromDB(Model2D model)
+		{
+			//najpierw potrzebuję jedynie utworzyć obiekty ModelPowierzchnia, potrzebuję do tego tylko niektóre dane
+			string query = @"select IDPow, IDModel, [PowObrys].ToString() as powObrys 
+                        from DefPowierzchni  where IDModel =" + model.idModel;
 
-                    BinaryFormatter formatter = new BinaryFormatter();
-                    formatter.Serialize(originalMemoryStream, modelDataBundle);
+			QueryData powierzchnieData = dbReader.readFromDB(query);
 
-                    using (GZipStream gzipStream = new GZipStream(compressedMemoryStream, CompressionMode.Compress))
-                    {
-                        originalMemoryStream.WriteTo(gzipStream);
-                        originalMemoryStream.Close();
-                    }
+			for (int i = 0; i < powierzchnieData.dataRowsNumber; i++)
+			{
+				ModelPowierzchnia pow = new ModelPowierzchnia();
 
-                    byte[] buffer = compressedMemoryStream.ToArray();
-                    int bufferSize = buffer.Length;
-                    compressedMemoryStream.Close();
+				pow.idPow = powierzchnieData.getQueryData()[i][0];
+				pow.idModel = powierzchnieData.getQueryData()[i][1];
+				pow.powObrys = powierzchnieData.getQueryData()[i][2].ToString();
 
-                    using (BinaryWriter binWriter = new BinaryWriter(stream))
-                    {
-                        stream.Position = stream.Length;
-                        binWriter.Write(bufferSize);            //pierwsze 4 bajty
-                        binWriter.Write(buffer);
-                    }
-                }
-            }
-            catch (OutOfMemoryException exc)
-            {
-                MyMessageBox.display(exc.Message + "\r\nwriteModelsToFile", MessageBoxType.Error);
-            }
-        }
+                string q = @"select * from DefPowierzchni  where IDPow =" + pow.idPow;
+				pow.powDataTable = dbReader.readFromDBToDataTable(q, 240);
+
+				model.addPowierzchnia(pow);
+			}
+		}
+		private void addModelToFile(string serializationFile, Model2D model)
+		{
+			ModelBundle modelDataBundle = new ModelBundle();
+			modelDataBundle.addModel(model);
+			try
+			{
+				//serialize
+				using (FileStream stream = new FileStream(serializationFile, FileMode.Open))
+				{
+
+					MemoryStream originalMemoryStream = new MemoryStream();
+					MemoryStream compressedMemoryStream = new MemoryStream();
+
+					BinaryFormatter formatter = new BinaryFormatter();
+					formatter.Serialize(originalMemoryStream, modelDataBundle);
+
+					using (GZipStream gzipStream = new GZipStream(compressedMemoryStream, CompressionMode.Compress))
+					{
+						originalMemoryStream.WriteTo(gzipStream);
+						originalMemoryStream.Close();
+					}
+
+					byte[] buffer = compressedMemoryStream.ToArray();
+					int bufferSize = buffer.Length;
+					compressedMemoryStream.Close();
+
+					using (BinaryWriter binWriter = new BinaryWriter(stream))
+					{
+						stream.Position = stream.Length;
+						binWriter.Write(bufferSize);            //pierwsze 4 bajty
+						binWriter.Write(buffer);
+					}
+				}
+			}
+			catch (OutOfMemoryException exc)
+			{
+				MyMessageBox.display(exc.Message + "\r\nwriteModelsToFile", MessageBoxType.Error);
+			}
+		}
 
         #endregion
 
@@ -743,23 +737,36 @@ namespace ModelTransfer
             modelIdsAfterRestoreDict.TryGetValue(model.idModel, out newModelId);
             model.setNewModelIdInPowierzchnia(newModelId);
 
-            string tableName = new DBConnector().getTableNameFromQuery(SqlQueries.getPowierzchnie);
+            int idPow = 0;
 
             for(int i=0; i < model.powierzchnieList.Count; i++)
             {
                 ModelPowierzchnia pow = model.powierzchnieList[i];
-                dbWriter.writeBulkDataToDB(pow.powDataTable, tableName, 120);
-            }
-        }        
+                dbWriter.writeBulkDataToDB(pow.powDataTable, "DefPowierzchni", 120);
+                if (i == 0)
+                    idPow = getMaxPowierzchniaIdFromDB();
+                else
+                    idPow++;
+				//mając idPow aktualizuję PowObrys
+				dbWriter.executeQuery("Update DefPowierzchni set PowObrys = '" + pow.powObrys + "' where IDPow =" + idPow);
+			}
+		}        
 
         private int getMaxModelIdFromDB()
         {
-            string query = SqlQueries.getMaxModelId;
-            QueryData res = dbReader.readFromDB(query);
+            string query = "select MAX(IDModel) as maxModelId from DefModel2D";
+			QueryData res = dbReader.readFromDB(query);
             return int.Parse(res.getQueryData()[0][0].ToString());
         }
 
-        #endregion
+		private int getMaxPowierzchniaIdFromDB()
+		{
+            string query = "select MAX(IDPow) as maxPowId from DefPowierzchni";
+			QueryData res = dbReader.readFromDB(query);
+			return int.Parse(res.getQueryData()[0][0].ToString());
+		}
 
-    }
+		#endregion
+
+	}
 }

@@ -84,10 +84,6 @@
     </Compile>
     <Compile Include="Model2D.cs" />
     <Compile Include="ModelDirectory.cs" />
-    <Compile Include="ModelGrid.cs" />
-    <Compile Include="ModelLinie.cs" />
-    <Compile Include="ModelPunkty.cs" />
-    <Compile Include="ModelTriangles.cs" />
     <Compile Include="MyMessageBox.cs">
       <SubType>Form</SubType>
     </Compile>

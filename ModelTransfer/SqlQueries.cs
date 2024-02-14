@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-
+﻿
 namespace ModelTransfer
 {
     public class SqlQueries
@@ -48,47 +42,6 @@ namespace ModelTransfer
         public static string getMaxModelId = "select MAX(IDModel) as maxModelId from DefModel2D";
 
         public static string getSumTriangles = "select  sum(ileTri) as numberOfTriangles from DefPowierzchni where IDModel in(@modelIds )";
-
-
-        //powierzchnie
-        //
-
-        public static string getPowierzchnie = "select * from DefPowierzchni ";
-            //@"select IDPow, IDModel, NazwaSkr, NazwaPow, Promien, PoczWspY, PoczWspX, RozmOczekY, RozmOczekX, LbaOczekY, LbaOczekX, IlPkt, IlSektor, Wykladnik, PowObrys, 
-                                               //DataPowierzchni, minZ, maxZ, ileTri, ileGrd, trojkaty_bin, punkty_bin, ilePkt, RTree_bin, RTree_bin_rozmiar, grid_bin, linie_bin, ileLinii, minX, maxX, minY, maxY from DefPowierzchni";
-
-        public static string getPowierzchnieDeclaration = "select IDPow, IDModel, NazwaSkr, NazwaPow from DefPowierzchni  ";
-
-
-        public static string getPowierzchnie_byIdModelFilter = " where IDModel =";
-        public static string getPowierzchnie_byIdPowFilter = " where IDPow =";
-
-        public static int getPowierzchnie_idPowIndex = 0;
-        public static int getPowierzchnie_idModelIndex = 1;
-        public static int getPowierzchnie_nazwaSkrIndex = 2;
-        public static int getPowierzchnie_nazwaPowIndex = 3;
-
-
-        public static string getMaxPowierzchniaId = "select MAX(IDPow) as maxPowId from DefPowierzchni ";
-
-        //
-        //punkty i pozostałe dane
-        //
-
-        public static string getPoints = "select IDPunkty, WspX, WspY, Rzedna, IDPow from Model_punkty where IDPow = ";
-        public static int getPoints_idPowIndex = 4;
-
-
-        public static string getTriangles = "select IDTrojkat, IDPunkty1, IDPunkty2, IDPunkty3, IDPow from Model_trojkaty where IDPow =";
-        public static int getTriangles_IdPowIndex = 4;
-
-
-        public static string getGrids = "select ID_gr, WspX, WspY, Rzedna, IDPow from Model_grid where IDPow = ";
-        public static int getGrids_IdPowIndex = 4;
-
-
-        public static string getBreaklines = "select IDLinia, IDPunkt1, IDPunkt2, IDPow from Model_linie where IDPow = ";
-        public static int getBreaklines_IdPowIndex = 3;
 
 
         //
